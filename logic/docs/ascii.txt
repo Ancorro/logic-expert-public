@@ -1,0 +1,53 @@
+LOGIC-STREAM ARCHITECTURE (Layer View)
+======================================
+
+Input
+  |
+  v
+[ Token IDs + Attention Mask ]
+  |
+  v
+[ HuggingFace Backbone Transformer ]
+  |        (output_hidden_states=True)
+  |____________________________________________________________
+  |            |            |                    |             |
+  v            v            v                    v             v
+[h_1]        [h_2]       [h_3]                ...           [h_N]
+  |            |            |                                  |
+  +------------+------------+----------------------------------+
+                           per-layer hidden states [B,S,H]
+                                      |
+                                      v
+                     [ LogicProjection per layer: H -> L ]
+                                      |
+                                      v
+                     [ LogicStream: N x LogicLayer blocks ]
+                                      |
+                                      v
+                      persistent logic_state across depth
+                               logic_state [B,L]
+                                      |
+                                      v
+                    [ Broadcast logic_state -> [B,S,L] ]
+                                      |
+                                      v
+                  [ FusionMLP (residual + learnable alpha) ]
+                                      |
+                           fused hidden [B,S,H]
+                                      |
+                                      v
+                              [ Pooling Layer ]
+                    - encoder: token at position 0
+                    - decoder: last non-padding token
+                                      |
+                                      v
+                         [ Task Head: Linear Classifier ]
+                                      |
+                                      v
+                           logits [B, num_labels]
+
+
+BASELINE PATH (for comparison)
+==============================
+Input -> Backbone final hidden -> Pooling -> Task Head -> Logits
+(no LogicProjection, no LogicStream, no FusionMLP)

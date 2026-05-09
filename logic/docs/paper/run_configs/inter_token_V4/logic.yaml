@@ -1,0 +1,111 @@
+_wandb:
+    value:
+        cli_version: 0.25.1
+        e:
+            hdola3mhcrngorc48ykeraop3imr5y3v:
+                codePath: V4_Eval.ipynb
+                colab: https://colab.research.google.com/notebook#fileId=1rqD54mPC-6roI7voymQm5ex04y3HTatH
+                cpu_count: 24
+                cpu_count_logical: 48
+                cudaVersion: "13.0"
+                disk:
+                    /:
+                        total: "253055008768"
+                        used: "64101076992"
+                email: cleasbys@oregonstate.edu
+                executable: /usr/bin/python3
+                gpu: NVIDIA RTX PRO 6000 Blackwell Server Edition
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Blackwell
+                      cudaCores: 24064
+                      memoryTotal: "102641958912"
+                      name: NVIDIA RTX PRO 6000 Blackwell Server Edition
+                      uuid: GPU-88513fed-a301-4b6a-28e9-2ff959a1419e
+                host: 924d45868d64
+                memory:
+                    total: "189928607744"
+                os: Linux-6.6.113+-x86_64-with-glibc2.35
+                program: V4_Eval.ipynb
+                python: CPython 3.12.12
+                root: /content
+                startedAt: "2026-03-18T03:52:53.984873Z"
+                writerId: hdola3mhcrngorc48ykeraop3imr5y3v
+        m: []
+        python_version: 3.12.12
+        t:
+            "1":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 51
+                - 53
+                - 71
+                - 105
+            "2":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 51
+                - 53
+                - 71
+                - 105
+            "3":
+                - 2
+                - 13
+                - 16
+                - 61
+                - 62
+            "4": 3.12.12
+            "5": 0.25.1
+            "6": 5.0.0
+            "8":
+                - 1
+                - 12
+            "10":
+                - 20
+            "12": 0.25.1
+            "13": linux-x86_64
+data:
+    value:
+        proofwriter_config: default
+        proofwriter_depth: all
+        train_max_samples: 10000
+        val_max_samples: 5000
+model:
+    value:
+        alpha_init: 0.01
+        capacity_window_axis: token
+        cross_attn_heads: 4
+        fusion_mode: linear_bridge
+        gate_mode: soft
+        logic_dim: 256
+        lora:
+            enabled: false
+        name: meta-llama/Llama-3.1-8B
+        no_gate_uses_cross_attn: null
+        num_gates: 8
+        param_matched_no_gate_update_type: null
+        routing_top_k: null
+        use_no_gate_stream: false
+        use_param_matched_baseline: false
+        variant: logic_llama
+        variant_note: standard
+train:
+    value:
+        batch_size: 30
+        epochs: 3
+        eval_batch_size: 30
+        learning_rate: 1e-05
+        max_length: 0
+        seed: 42
+        use_bf16_if_available: true
+        weight_decay: 0.01
+wandb:
+    value:
+        group: v4-eval-sequential
+        run_name: logic_llama-seed42
