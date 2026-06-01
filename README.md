@@ -12,7 +12,7 @@ operators along either the **intra-token** (feature) axis or the **inter-token**
 classification — imposing a structured, interpretable composition over token features.
 
 > Author: **Steven Cleasby-Mayeda** — Oregon State University
-> Paper (CVPR-style writeup): [`logic/LaTeX_dir/latex/egpaper_final.pdf`](logic/LaTeX_dir/latex/egpaper_final.pdf)
+> Paper (CVPR-style writeup): [`logic/LaTeX_dir/latex/Logic_Expert.pdf`](logic/LaTeX_dir/latex/Logic_Expert.pdf)
 
 ---
 
@@ -58,7 +58,7 @@ logic/
                               # eval drivers used for the paper
     logic_hf.ipynb            # interactive walkthrough on a HF backbone
   LaTeX_dir/latex/
-    egpaper_final.pdf         # paper
+    Logic_Expert.pdf          # paper
     plots/                    # paper figures (architecture, routing heatmap, ...)
   requirements-logic.txt
 ```
