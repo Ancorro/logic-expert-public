@@ -32,7 +32,7 @@
     /* Transitions */
     --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    --header-scroll-offset: 4.25rem;
+    --header-scroll-offset: 6.5rem;
     --paper-side-width: 260px;
     --paper-main-width: 850px;
 }
@@ -131,11 +131,11 @@ p {
 
 /* Navigation Header */
 header {
-    position: fixed;
-    top: 0;
+    position: sticky;
+    top: var(--header-scroll-offset);
     left: 0;
     width: 100%;
-    z-index: 100;
+    z-index: 40;
     background: rgba(245, 241, 235, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
