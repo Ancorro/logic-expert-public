@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallel Logic Expert with Operator Routing | Full Paper</title>
+
+    <!-- Meta tags for SEO -->
+    <meta name="description"
+        content="Read the full publication for the Parallel Logic Expert with Operator Routing. An architectural pathway that routes token features into fixed fuzzy logical operators (AND/OR/NOT).">
+    <meta name="keywords"
+        content="PyTorch, Llama 3.1, Mixture of Experts, MoE, Fuzzy Logic, Deep Learning, NLP, Oregon State University, Steven Cleasby-Mayeda">
+    <meta name="author" content="Steven Cleasby-Mayeda">
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon-option-routing.svg">
+
+    <!-- CSS and Fonts -->
+    <link rel="stylesheet" href="index.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- MathJax Setup -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="paper-page">
+
+    <!-- Background glow elements -->
+    <div class="bg-glow"></div>
+
+    <!-- Navigation Header -->
+    <header>
+        <div class="paper-container">
+            <a href="index.html" class="logo" id="nav-logo">
+                <span class="logo-mark" aria-hidden="true">
+                    <img src="assets/images/favicon-option-routing.svg" alt="">
+                </span>
+                <span>Parallel Logic Expert Research</span>
+            </a>
+            <div class="nav-buttons">
+                <a href="index.html" class="btn btn-active btn-sm" id="btn-nav-paper" aria-current="page">
+                    Full Paper
+                </a>
+                <a href="playground.html" class="btn btn-secondary btn-sm" id="btn-nav-playground">
+                    Architecture Sandbox
+                </a>
+                <a href="https://github.com/Ancorro/logic-expert-public" class="btn btn-secondary btn-sm"
+                    id="btn-nav-github">
+                    <i class="fab fa-github"></i> GitHub Repo
+                </a>
+                <a href="assets/pdf/Logic_Expert.pdf" class="btn btn-secondary btn-sm" id="btn-nav-download" download>
+                    <i class="fas fa-file-pdf"></i> Download Paper
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="paper-layout paper-container">
+
+        <!-- Sidebar Table of Contents -->
+        <aside class="paper-toc">
+            <div class="toc-sticky">
+                <h3>Paper Sections</h3>
+                <ul>
+                    <li><a href="#abstract">Abstract</a></li>
+                    <li><a href="#introduction">1. Introduction</a></li>
+                    <li><a href="#related-work">2. Related Work</a></li>
+                    <li><a href="#methods">3. Methods</a></li>
+                    <li><a href="#experiments">4. Experiments</a></li>
+                    <li><a href="#results">5. Results</a></li>
+                    <li><a href="#discussion">6. Discussion</a></li>
+                    <li><a href="#limitations">7. Limitations</a></li>
+                    <li><a href="#conclusion">8. Conclusion</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Paper Body (Academic Sheet) -->
+        <article class="paper-sheet">
+
+            <!-- Paper Title Block -->
+            <div class="paper-title-section">
+                <h1>Parallel Logic Expert with Operator Routing</h1>
+                <div class="paper-authors">
+                    <div class="author-block">
+                        <strong>Steven Cleasby-Mayeda</strong>
+                        <span>Oregon State University</span>
+                        <a href="mailto:cleasbys@oregonstate.edu" class="author-email">cleasbys@oregonstate.edu</a>
+                        <a href="mailto:steven.cleasby.mayeda@gmail.com" class="author-email">steven.cleasby.mayeda@gmail.com</a>
+                    </div>
+                </div>
+                <div class="paper-course">AI535 Deep Learning</div>
+                <div class="paper-date">25 March 2026</div>
+            </div>
+
+            <!-- Abstract -->
+            <section id="abstract" class="abstract-box">
+                <h3>Abstract</h3>
+                <p>
+                    We introduce a logic-augmented transformer pathway that routes token-level representations into
+                    fixed fuzzy logical operators (AND/OR/NOT) or straight-through-estimation, so the network learns
+                    compositional structure rather than an ensemble of expert networks with shared architecture design.
+                    At each backbone layer, the hidden states are projected to a lower dimensional K, Q, which the
+                    running logic state queries (cross-attention). The attention matrix is routed, and local windows
+                    over either token or gate-channel axes are composed. The final logic state is fused with the
+                    backbone features before classification. The proposed architecture augmentation imposes structured,
+                    interpretable compositions over token features. A key design dimension is the axis of composition:
+                    intra-token compositions (feature axis) compares features within a token, while inter-token
+                    compositions (sequence axis) compares features across neighboring tokens. We evaluate these design
+                    choices under controlled settings with matched parameter budgets, report task performance, and
+                    mechanism-level visualizations of the activations of the novel components.
+                </p>
+            </section>
+
+            <!-- Two Column Document Flow (Split by Section) -->
+
+            <!-- 1. Introduction -->
+            <section id="introduction">
+                <h2>1. Introduction</h2>
+                <div class="paper-content-columns">
+                    <p>
+                        Transformers provide strong performance on a wide variety of tasks <a
+                            href="#ref-attention-is-all-you-need" class="citation-link">[1]</a>. Both chain-of-thought
+                        (CoT) prompting and reasoning models can greatly improve performance on reasoning tasks <a
+                            href="#ref-cot" class="citation-link">[2, 3]</a>. However, many CoT approaches use N-shot
+                        prompting. Additionally, both CoT and reasoning models utilize reasoning by iterative and
+                        extended inference, which requires far more tokens. This increases inference costs for many
+                        tasks <a href="#ref-cot" class="citation-link">[2]</a>.
+                    </p>
+                    <p>
+                        Our approach instead introduces a novel architecture for structured computation within the
+                        latent space, with no additional tokens needed. We will test how this constrained,
+                        logic-inspired pathway affects performance on reasoning problems and generalization.
+                    </p>
+
+                    <p>
+                        Mixture-of-Experts (MoE) models <a href="#ref-moe-1" class="citation-link">[4, 5, 6]</a>
+                        introduce conditional computation by routing tokens to specialized subnetworks, or weighting the
+                        results of several/all experts. Our method introduces conditional computation by routing and
+                        weighting tokens to logical operators. In this formulation, the operator routing is learned
+                        rather than expert weights. When tied with attention, this method may allow robust routing in
+                        the logic space. This space has forced sparsity due to softmax and local compositions (local
+                        intra-token or inter-token windows), which may allow the emergence of specialized
+                        operator-feature connections.
+                    </p>
+                    <p>
+                        Our activation metrics allow learned logic compositions to be interpreted. Routing entropy and
+                        fusion $\alpha$ parameters allow us to measure the utilization of the logic expert. Experiments
+                        on logical reasoning benchmarks compare the Baseline, the No-Gate Control network (a baseline
+                        with matched parameter count for fair comparison), and the logic expert variants.
+                    </p>
+                    <p>
+                        A core design question is how the local operator windows should be applied in the gate
+                        compositions. Our first implementation applies capacity on the channel axis (neighboring
+                        channels on one token). The next design applies capacity on the token axis: each channel
+                        compares the same indexed feature on neighboring tokens (channels remain independent). This axis
+                        change can have a large impact on which feature relationships are learnable, which has large
+                        implications for performance. Figure 1 provides a high-level view of the architecture.
+                    </p>
+                    <p>
+                        Contributions of this paper are: (1) inter-token compositional routing with operator reductions
+                        and residual logic-state updates; (2) controlled ablations over logic dimension, gate count,
+                        window size/axis, gate mode, and fusion $\alpha$; and (3) evaluation on reasoning and transfer
+                        settings with mechanism-level metrics (routing entropy, fusion $\alpha$, and average gradient
+                        norm).
+                    </p>
+
+                    <!-- Figure 1 (Spans both columns inside the two-column grid) -->
+                    <figure class="paper-figure span-both-columns" id="fig-architecture">
+                        <img src="assets/images/arch1.png" alt="Logic Stream Architecture Block Diagram">
+                        <figcaption><strong>Figure 1:</strong> Our architecture, backbone hidden-states feed to logic
+                            expert, and fused back with the backbone features before classification.</figcaption>
+                    </figure>
+
+                    <div class="page-break-divider span-both-columns"><span>pg. 1</span></div>
+                </div>
+            </section>
+
+            <!-- 2. Related Work -->
+            <section id="related-work">
+                <h2>2. Related Work</h2>
+                <div class="paper-content-columns">
+                    <p>
+                        Logical and logic-inspired neural architectures span a wide variety of designs, from classic
+                        weightless systems to modern differentiable operator networks <a href="#ref-aleksander"
+                            class="citation-link">[7]</a>. Some architectures utilize explicit logical or logic-inspired
+                        differentiable operators <a href="#ref-diff-logic" class="citation-link">[8]</a> as an
+                        alternative to dense transformations, providing evidence that structured logical computation can
+                        be more efficient and interpretable than typical transformers. Our approach builds on this
+                        motivation, but integrates operator routing directly into the transformer hidden-state rather
+                        than standalone units.
+                    </p>
+                    <p>
+                        Deep Differentiable Logic Gate Networks combine real-valued logical operators with continuous
+                        relaxations (differentiable approximations of discrete logical gates used in gradient descent)
+                        and can achieve very efficient inference (one million+ MNIST images/s on a single CPU core) <a
+                            href="#ref-diff-logic" class="citation-link">[8]</a>.
+                    </p>
+                    <p>
+                        Logical Neural Networks (LNNs) <a href="#ref-lnn" class="citation-link">[9]</a> map neural units
+                        to components of weighted logical formulas, yielding highly interpretable representations and
+                        supporting logic-consistent reasoning. LNNs use explicitly logic-structured model semantics.
+                    </p>
+                    <p>
+                        Differentiable Logic Machines (DLMs) <a href="#ref-dlm" class="citation-link">[10]</a> define a
+                        continuous relaxation of first-order logic program spaces (via predicate-weighted
+                        parameterization) and learn interpretable logic programs with gradient descent. In contrast to
+                        these approaches, which operate over structured relational inputs or operations on the input
+                        space, our method integrates logical composition in the feature space, learning logical
+                        compositions over token features.
+                    </p>
+                    <p>
+                        MoE architectures use a learned gating mechanism to route inputs to specialized expert
+                        subnetworks. In adaptive mixtures of local experts, the objective for each expert is decoupled
+                        from other experts, enabling specialization over different input regions, and thus allowing both
+                        specialized and general networks <a href="#ref-moe-1" class="citation-link">[4]</a>. These
+                        models can also improve inference efficiency via forced sparse activations. Conditional
+                        computation methods such as MoE and sparse routing motivate learned token-dependent routing
+                        decisions <a href="#ref-moe-2" class="citation-link">[5, 6]</a>. Our model is closest to this
+                        line of work, but uses compact differentiable operators instead of expert-token dispatch among
+                        independent expert sub-networks.
+                    </p>
+                    <p>
+                        Fuzzy-set theory provides continuous, differentiable functions <a href="#ref-fuzzy"
+                            class="citation-link">[11]</a>. We use fuzzy-set operations to estimate logical operations,
+                        which allows training with any off-the-shelf gradient-based optimizer. Our architecture is
+                        contrasted by Neural-Symbolic networks, where explicit logic is composed in the non-compressed
+                        input space (for example, decision trees or markov-networks) <a href="#ref-neurosymbolic"
+                            class="citation-link">[12]</a>.
+                    </p>
+                    <div class="page-break-divider span-both-columns"><span>pg. 2</span></div>
+                </div>
+            </section>
+
+            <!-- 3. Methods -->
+            <section id="methods">
+                <h2>3. Methods</h2>
+                <div class="paper-content-columns">
+
+                    <h3>3.1. Architecture and State Representation</h3>
+                    <p>
+                        The logic-augmented architecture introduces the logic-expert pathway parallel to the transformer
+                        backbone. At each layer $t$, the backbone produces hidden states:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$H_t \in \mathbb{R}^{B \times S \times H}$$
+                        </div>
+                        <div class="equation-number">(1)</div>
+                    </div>
+                    <p>
+                        In parallel, the logic expert maintains logic states which are updated at every layer:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$L_t \in \mathbb{R}^{B \times S \times L}$$
+                        </div>
+                        <div class="equation-number">(2)</div>
+                    </div>
+                    <p>
+                        At each layer, the logic state attends to the backbone via multi-head cross-attention, producing
+                        attended logic features:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$\tilde{L}_t$$
+                        </div>
+                        <div class="equation-number">(3)</div>
+                    </div>
+                    <p>
+                        After the final layer, the logic state is fused with the backbone:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$H_{\text{fused}} = H_{\text{last}} + \alpha W_f L_{\text{last}}$$
+                        </div>
+                        <div class="equation-number">(4)</div>
+                    </div>
+                    <p>
+                        where $\alpha$ controls the contribution of the logic pathway.
+                    </p>
+
+                    <p>
+                        <strong>Notation.</strong> $\pi_t$: routing weights; $s_t$: gate activations; $u_t$: routed gate
+                        activations; $B$: batch size; $S$: sequence length; $H$: backbone hidden dimension; $L$:
+                        logic-state dimension; $G$: gates per operator family (AND/OR/NOT), with total routed channels
+                        $3G$; $C_t$: local window size at layer $t$; $\tau$: routing softmax temperature.
+                    </p>
+
+                    <h3>3.2. Cross-Attention into Logic Space</h3>
+                    <p>
+                        At each layer, logic tokens act as queries, while backbone hidden states are projected to keys
+                        and values. This produces attended logic features:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$\tilde{L}_t := \text{CrossAttention}(L_{t-1}, H_t)$$
+                        </div>
+                        <div class="equation-number">(5)</div>
+                    </div>
+                    <p>
+                        These features serve as the input to the routing and composition stage.
+                    </p>
+
+                    <h3>3.3. Routing and Gate Computation</h3>
+                    <p>
+                        Routing and gate activation use separate learned projection matrices: $W_r$ produces routing
+                        logits, while $W_g$ produces gate activations.
+                    </p>
+                    <p>
+                        Routings are computed from $\tilde{L}_t$:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$R_t := \tilde{L}_t W_r, \quad W_r \in \mathbb{R}^{L \times 3G}$$
+                        </div>
+                        <div class="equation-number">(6)</div>
+                    </div>
+                    <p>
+                        Routing weights are:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$\pi_t[b,s,j] = \frac{\exp(R_t[b,s,j]/\tau)}{\sum_{k=1}^{3G} \exp(R_t[b,s,k]/\tau)}$$
+                        </div>
+                        <div class="equation-number">(7)</div>
+                    </div>
+                    <p>
+                        Gate activations are computed as:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$s_t := \sigma(\tilde{L}_t W_g), \quad W_g \in \mathbb{R}^{L \times 3G}$$
+                        </div>
+                        <div class="equation-number">(8)</div>
+                    </div>
+                    <p>
+                        The routed soft activations are:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$u_t^{\mathrm{soft}} := \pi_t \odot s_t$$
+                        </div>
+                        <div class="equation-number">(9)</div>
+                    </div>
+                    <p>
+                        In soft mode, $u_t := u_t^{\mathrm{soft}}$. In STE mode (forward binarized), we use:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$\begin{align} u_t^{\mathrm{hard}} &:= \mathbf{1}[u_t^{\mathrm{soft}} \ge 0.5], \\ u_t &:=
+                            u_t^{\mathrm{soft}} + \operatorname{sg}(u_t^{\mathrm{hard}} - u_t^{\mathrm{soft}})
+                            \end{align}$$
+                        </div>
+                        <div class="equation-number">(10)</div>
+                    </div>
+                    <p>
+                        We split:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$[u_t^{\text{AND}}, u_t^{\text{OR}}, u_t^{\text{NOT}}] := \operatorname{split}(u_t; G, G,
+                            G)$$
+                        </div>
+                        <div class="equation-number">(11)</div>
+                    </div>
+
+                    <div class="page-break-divider span-both-columns"><span>pg. 3</span></div>
+
+                    <h3>3.4. Windowed Operator Composition</h3>
+                    <p>
+                        Let $v \in [0,1]^{B \times S \times G}$ denote one operator group. Windows are causal and
+                        defined along either the inter-token axis (sequence), or intra-token axis (channels).
+                    </p>
+                    <p>
+                        For inter-token composition:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$v_{\text{win}} \in \mathbb{R}^{B \times S \times G \times C_t}$$
+                        </div>
+                        <div class="equation-number">(12)</div>
+                    </div>
+                    <p>
+                        Operators are:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$\begin{align}
+                            \text{AND}(x) &= \prod_{i=1}^{C_t} x_i, \\
+                            \text{OR}(x) &= 1 - \prod_{i=1}^{C_t}(1 - x_i), \\
+                            \text{NOT}(x) &= 1 - x.
+                            \end{align}$$
+                        </div>
+                        <div class="equation-number">(13)</div>
+                    </div>
+                    <p>
+                        Applying to routed groups:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$\begin{align}
+                            a_{b,s,g} &:= \text{AND}(\operatorname{win}(u_t^{\text{AND}})_{b,s,g,:}), \\
+                            o_{b,s,g} &:= \text{OR}(\operatorname{win}(u_t^{\text{OR}})_{b,s,g,:}), \\
+                            n_{b,s,g,:} &:= \text{NOT}(\operatorname{win}(u_t^{\text{NOT}})_{b,s,g,:}).
+                            \end{align}$$
+                        </div>
+                        <div class="equation-number">(14)</div>
+                    </div>
+                    <p>
+                        AND and OR reduce to $[B,S,G]$. NOT is applied elementwise and flattened to $[B,S,G \cdot C_t]$,
+                        to preserve negation operation structure. The concatenated representation has dimension:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$G + G + G \cdot C_t = G(C_t + 2)$$
+                        </div>
+                        <div class="equation-number">(15)</div>
+                    </div>
+
+                    <h3>3.5. Layer Update and Residual Flow</h3>
+                    <p>
+                        The concatenated operator outputs are projected:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$\Delta L_t := \text{Linear}(\text{concat}(a, o, n))$$
+                        </div>
+                        <div class="equation-number">(16)</div>
+                    </div>
+                    <p>
+                        The logic state is updated via:
+                    </p>
+                    <div class="equation-row">
+                        <div class="equation-math">
+                            $$L_t = \mathrm{RMSNorm}(L_{t-1} + \Delta L_t)$$
+                        </div>
+                        <div class="equation-number">(17)</div>
+                    </div>
+
+                    <h3>3.6. Output Fusion</h3>
+                    <p>
+                        After the final layer, fusion is applied as in Eq. (4). $\alpha$ may be fixed or learned; it
+                        directly controls the contribution of the logic expert.
+                    </p>
+                    <div class="page-break-divider span-both-columns"><span>pg. 4</span></div>
+                </div>
+            </section>
+
+            <!-- 4. Experiments -->
+            <section id="experiments">
+                <h2>4. Experiments</h2>
+                <div class="paper-content-columns">
+
+                    <h3>4.1. Setup</h3>
+                    <p>
+                        We use Llama-3.1-8B <a href="#ref-llama" class="citation-link">[13]</a> as the shared backbone
+                        for all variants. We compare: (i) a Baseline model, (ii) a No-Gate Control (parameter-matched),
+                        and (iii+) the logic expert variants. The No-Gate Control serves as a parameter-matched control
+                        to separate routing effects from pure parameter-count gains. All variants use the 3 label
+                        classifier head. The original Llama head is not used. In this control, the parallel branch
+                        excludes cross-attention, operator routing, and compositional gating. All experiments use the
+                        AdamW <a href="#ref-adamw" class="citation-link">[14]</a> optimizer and cross-entropy loss.
+                        Values are collected on a single NVIDIA RTX PRO 6000 Blackwell Server Edition GPU (CUDA 12.8)
+                        running on Google Colab.
+                    </p>
+
+                    <h3>4.2. Logical Reasoning -- ProofWriter</h3>
+                    <p>
+                        We use the ProofWriter <a href="#ref-proofwriter" class="citation-link">[15]</a> dataset to
+                        compare logical reasoning to the baselines. ProofWriter is a logical reasoning dataset where
+                        each sample contains a small rulebase (facts plus rules) and a query to evaluate as true, false,
+                        or unknown. It is useful here because it directly tests multi-step compositional inference,
+                        which matches the intended behavior of the routed logic pathway. We use deterministic, matched
+                        sampling across all models (10k train, 5k validation, all problem depths). Unless otherwise
+                        noted, all runs use matched seeds. Main runs are trained for 3 epochs; longer training only
+                        decreased classification due to overfitting.
+                    </p>
+
+                    <h3>4.3. Beyond Logic -- Multi-Genre Natural Language (MNLI)</h3>
+                    <p>
+                        To test performance beyond rulebase logic tasks, we evaluate performance on Multi-Genre Natural
+                        Language (MNLI) <a href="#ref-mnli" class="citation-link">[16]</a>. MNLI allows us to evaluate
+                        the natural language understanding of the model. MNLI has logical multi-class labels
+                        (Entailment, Neutral, Contradiction), this allows us to map to the same 3-label classification
+                        head used for ProofWriter.
+                    </p>
+
+                    <h3>4.4. Hyperparameter Evaluations</h3>
+                    <p>
+                        Primary hyperparameters are logic dimension: $L$, gate count: $G$, gate mode: (soft vs STE),
+                        gate window size: $C_t$, window axis: (inter-token vs intra-token), fusion $\alpha$ mode: (fixed
+                        vs learned), and initial fusion $\alpha$. We validate on task validation sets; we use the
+                        No-Gate Control architecture to avoid attributing gains to unmatched model size.
+                    </p>
+
+                    <h3>4.5. Metrics</h3>
+                    <p>
+                        Training metrics are validation accuracy and validation loss. Operator mechanism metrics are
+                        routing entropy and fusion $\alpha$. We also report average gradient norm (Avg Grad Norm) as an
+                        optimization-health signal. Stable gradient norms generally indicate smoother updates, very
+                        large norms can indicate unstable training dynamics, small gradient norms indicates arrested
+                        training.
+                    </p>
+                    <div class="page-break-divider span-both-columns"><span>pg. 5</span></div>
+                </div>
+            </section>
+
+            <!-- 5. Results (Spans both columns to show Table 1) -->
+            <section id="results">
+                <h2>5. Results</h2>
+                <div class="paper-content-columns">
+                    <div class="span-both-columns">
+                        <h3>5.1. ProofWriter</h3>
+                        <div class="subsection-columns">
+                            <p style="text-indent: 0;">
+                                Table 1 reports final validation accuracy under the evaluation protocol used for each run,
+                                validation loss, and fusion parameter state (fixed vs learned) after 3 epochs.
+                            </p>
+                            <p style="text-indent:0;">
+                                The parameter-matched control model substantially outperforms the Baseline, indicating that
+                                additional parallel capacity alone already improves performance, while routing variants provide
+                                the strongest overall scores in this setting.
+                            </p>
+                            <p>
+                                The best observed ProofWriter result is the inter-token routed variant with $G=8$ and fixed
+                                $\alpha=0.01$ (0.562 val accuracy), compared with 0.525 for No-Gate Control and 0.417 for
+                                Baseline. Inter-token routing is consistently competitive with or better than intra-token
+                                routing at matched gate count, while increasing to $G=16$ under these settings reduces accuracy
+                                (0.501), indicating that more routed channels do not automatically improve quality. Additional
+                                hyperparameters listed in the appendix.
+                            </p>
+                            <p>
+                                The mechanism columns in Table 1 show routed variants have substantially lower gradient norms
+                                (about 10.41--10.96) than the Baseline (29.38), while No-Gate Control is intermediate (11.14).
+                                This is consistent with more stable update magnitudes in the routed settings under the current
+                                training regime. Routing entropy is tightly clustered around 3.067 for the $G=8$ routed runs,
+                                but rises to 3.7483 for $G=16$, where validation quality drops. In this sweep, higher routing
+                                entropy at larger gate count appears to coincide with weaker task performance, suggesting a more
+                                diffuse routing regime that does not translate into better accuracy.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Table 1 (Wide Double Column Table) -->
+                    <div class="table-wrapper span-both-columns" style="margin: 1.5rem 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Validation Accuracy</th>
+                                    <th>Validation Loss</th>
+                                    <th>Fusion $\alpha$</th>
+                                    <th>Routing Entropy</th>
+                                    <th>Avg Grad Norm</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Baseline</td>
+                                    <td>0.417</td>
+                                    <td>1.063</td>
+                                    <td>--</td>
+                                    <td>--</td>
+                                    <td>29.3765</td>
+                                </tr>
+                                <tr>
+                                    <td>No-Gate Control</td>
+                                    <td>0.525</td>
+                                    <td>0.820</td>
+                                    <td>0.00001 (fixed)</td>
+                                    <td>--</td>
+                                    <td>11.1387</td>
+                                </tr>
+                                <tr>
+                                    <td>Routed (intra, G=8)</td>
+                                    <td>0.542</td>
+                                    <td>0.818</td>
+                                    <td>0.00001 (fixed)</td>
+                                    <td>3.0675</td>
+                                    <td>10.5972</td>
+                                </tr>
+                                <tr>
+                                    <td>Routed (inter, G=8)</td>
+                                    <td>0.546</td>
+                                    <td>0.819</td>
+                                    <td>0.1 (fixed)</td>
+                                    <td>3.0668</td>
+                                    <td>10.4154</td>
+                                </tr>
+                                <tr style="background: rgba(249, 115, 22, 0.08);">
+                                    <td><strong>Routed (inter, G=8)</strong></td>
+                                    <td class="highlight-cell"><strong>0.562</strong></td>
+                                    <td><strong>0.816</strong></td>
+                                    <td><strong>0.01 (fixed)</strong></td>
+                                    <td><strong>3.0666</strong></td>
+                                    <td><strong>10.4054</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Routed (inter, G=8)</td>
+                                    <td>0.546</td>
+                                    <td>0.819</td>
+                                    <td>0.006 (learned)</td>
+                                    <td>3.0666</td>
+                                    <td>10.5527</td>
+                                </tr>
+                                <tr>
+                                    <td>Routed (inter, G=16)</td>
+                                    <td>0.501</td>
+                                    <td>0.837</td>
+                                    <td>0.00001 (fixed)</td>
+                                    <td>3.7483</td>
+                                    <td>10.9610</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="table-caption"><strong>Table 1:</strong> ProofWriter validation results after 3 epochs. Routed variants outperform both the Baseline and No-Gate Control. The best result is inter-token routing with G=8 and fixed α=0.01.</p>
+                    </div>
+
+                    <div class="page-break-divider span-both-columns"><span>pg. 6</span></div>
+
+                    <h3>5.2. Size and Transfer</h3>
+                    <p>
+                        A key confound in models is added trainable parameters. Table 2 confirms close parameter
+                        matching between No-Gate Control and routed variants (only small differences), the single-task
+                        gains from the best routed model are very unlikely to be explained solely by increased
+                        parameter-count.
+                    </p>
+
+                    <!-- Table 2 (Fits in Column) -->
+                    <div class="table-wrapper" style="margin: 1rem 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model Variant</th>
+                                    <th>Trainable Parameters</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Baseline</td>
+                                    <td>7,504,936,963</td>
+                                </tr>
+                                <tr>
+                                    <td>No-Gate Control</td>
+                                    <td>7,582,192,484</td>
+                                </tr>
+                                <tr>
+                                    <td>Routed (G=8)</td>
+                                    <td>7,579,068,164</td>
+                                </tr>
+                                <tr>
+                                    <td>Routed (G=16)</td>
+                                    <td>7,579,725,060</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="table-caption"><strong>Table 2:</strong> Trainable parameter counts across model variants, confirming close parameter matching between No-Gate Control and routed variants.</p>
+                    </div>
+
+                    <h3>5.3. Multi-Genre Natural Language (MNLI)</h3>
+                    <p>
+                        MNLI <a href="#ref-mnli" class="citation-link">[16]</a> combines sentence understanding with
+                        logic multi-class labels. We map the labels to the ProofWriter classes (contradiction
+                        $\rightarrow 0$, entailment $\rightarrow 1$, neutral $\rightarrow 2$). For comparability,
+                        evaluation uses matched sampling. Table 3 reports MNLI results.
+                    </p>
+
+                    <!-- Table 3 (Fits in Column) -->
+                    <div class="table-wrapper" style="margin: 1rem 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>MNLI Val Acc</th>
+                                    <th>MNLI Val Loss</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: rgba(249, 115, 22, 0.08);">
+                                    <td><strong>No-Gate Control</strong></td>
+                                    <td class="highlight-cell"><strong>0.89</strong></td>
+                                    <td><strong>0.34</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Routed (intra, G=8)</td>
+                                    <td>0.88</td>
+                                    <td>0.36</td>
+                                </tr>
+                                <tr>
+                                    <td>Routed (inter, G=8)</td>
+                                    <td>0.88</td>
+                                    <td>0.39</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="table-caption"><strong>Table 3:</strong> MNLI single-task validation results. No-Gate Control achieves the highest accuracy (0.89), with routed variants close behind.</p>
+                    </div>
+
+                    <p>
+                        Table 3 reports MNLI results. On MNLI, No-Gate Control achieves the highest validation accuracy
+                        (0.888), with routed variants close behind (0.880 intra, 0.878 inter). This suggests broadly
+                        similar transfer performance at this scale; without multi-seed variance estimates, these small
+                        margins should be interpreted as comparable rather than decisive. Transfer behavior appears
+                        dependent on the supervision regime and routing configuration.
+                    </p>
+
+                    <h3>5.4. Multi-task Training</h3>
+                    <p>
+                        For multi-task training, each mini-batch is sampled from a 50/50 mixture of ProofWriter and
+                        MNLI. This experiment tests whether routing can jointly optimize symbolic-style and open-domain
+                        NLI supervision without degrading either task. Total training steps and optimizer
+                        hyperparameters are matched to single-task runs, and we report per-task validation metrics after
+                        joint training.
+                    </p>
+
+                    <!-- Table 4 (Fits in Column) -->
+                    <div class="table-wrapper" style="margin: 1rem 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>ProofWriter Acc</th>
+                                    <th>MNLI Acc</th>
+                                    <th>Mean</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: rgba(249, 115, 22, 0.08);">
+                                    <td><strong>No-Gate Control</strong></td>
+                                    <td class="highlight-cell"><strong>0.544</strong></td>
+                                    <td>0.879</td>
+                                    <td class="highlight-cell"><strong>0.712</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Routed (inter, G=8)</td>
+                                    <td>0.536</td>
+                                    <td class="highlight-cell"><strong>0.881</strong></td>
+                                    <td>0.709</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="table-caption"><strong>Table 4:</strong> Multi-task (50/50 ProofWriter + MNLI) validation results. No-Gate Control and routed variants show near-tied aggregate performance.</p>
+                    </div>
+
+                    <p>
+                        Table 4 reports the 50/50 multi-task evaluation. In the joint setting, No-Gate Control attains
+                        the higher average accuracy (0.712 vs 0.709), while Routed (inter, $G=8$) attains slightly
+                        higher MNLI accuracy (0.881 vs 0.879). This indicates a small task trade-off under 50/50 mixing:
+                        routing is competitive in aggregate and can preserve transfer-side performance, but these
+                        differences are very small and are best interpreted as similar overall performance under the
+                        current multi-task configuration.
+                    </p>
+                    <div class="page-break-divider span-both-columns"><span>pg. 7</span></div>
+                </div>
+            </section>
+
+            <!-- 6. Discussion -->
+            <section id="discussion">
+                <h2>6. Discussion</h2>
+                <div class="paper-content-columns">
+                    <p>
+                        The single-task results show that the routed logic expert variants can outperform both the
+                        Baseline and the parameter-matched No-Gate Control, suggesting that gains are not solely due to
+                        increased capacity and are influenced by compositional routing bias. In contrast, the new 50/50
+                        multi-task results show a tighter regime with near-tied outcomes: No-Gate Control has a slightly
+                        higher average accuracy (0.712 vs 0.709), while the routed variant is slightly higher on MNLI
+                        within the joint setting (0.881 vs 0.879). Given the tiny margins, these results are best read
+                        as similar performance pending multi-seed validation. Single-task MNLI transfer follows the same
+                        pattern, while ProofWriter shows larger routed gains. Overall, the evidence suggests a
+                        task-dependent benefit profile in which routing is more helpful for logical-composition
+                        supervision.
+                    </p>
+                    <p>
+                        Fusion $\alpha$ provides additional insight: models with moderate nonzero $\alpha$ values
+                        indicate that the routing branch is actively contributing to predictions, while near-zero values
+                        suggest the model ignores the logic pathway. This highlights the importance of monitoring
+                        mechanism-level metrics alongside task performance.
+                    </p>
+                    <p>
+                        The inter-token capacity formulation changes the inductive bias of gate composition from
+                        cross-channel local comparison to cross-token local comparison. This makes each gate channel
+                        temporally local while preserving channel independence. Empirically, this design should be
+                        interpreted together with routing entropy and fusion $\alpha$: low entropy with stable nonzero
+                        $\alpha$ indicates specialized gates that remain active in final prediction, but these mechanism
+                        diagnostics should be interpreted alongside task-level metrics and held-out evaluation <a
+                            href="#ref-generalization" class="citation-link">[17]</a>.
+                    </p>
+
+                    <!-- Table 5 (Fits in Column) -->
+                    <div class="table-wrapper" style="margin: 1rem 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Validation Acc</th>
+                                    <th>Validation Loss</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: rgba(249, 115, 22, 0.08);">
+                                    <td><strong>Routed-Gate-Only</strong></td>
+                                    <td class="highlight-cell"><strong>0.5348</strong></td>
+                                    <td><strong>0.832</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>No-Gate Control</td>
+                                    <td>0.4646</td>
+                                    <td>1.065</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="table-caption"><strong>Table 5:</strong> Routed-Gate-Only ablation vs. No-Gate Control on ProofWriter. Results from an earlier implementation with different hyperparameters; not directly comparable to Table 1.</p>
+                    </div>
+
+                    <p>
+                        Table 5 suggests that cross-attention is likely not the sole source of gains in the logic
+                        expert. However, these values come from an earlier implementation with additional architectural
+                        and hyperparameter differences, so both the baseline and logic-expert scores are not directly
+                        comparable to the main results in Table 1.
+                    </p>
+                    <p>
+                        Initialization of the learnable fusion $\alpha$ also affects optimization stability. In our
+                        sweeps, values in the 0.01--0.25 range were generally stable, with 0.1 yielding the strongest
+                        observed validation accuracy.
+                    </p>
+
+                    <h3>6.1. Routing Visualization</h3>
+                    <p>
+                        Figure 2 visualizes routing specialization directly. We see there the heatmap is sparse, with
+                        only a few hot-spots, this implies there are several operators that dominate contribution. This
+                        figure is used alongside routing entropy, which summarizes concentration numerically, while the
+                        heatmap shows where specialization appears across layers.
+                    </p>
+
+                    <!-- Figure 2 (Spanned both columns) -->
+                    <figure class="paper-figure span-both-columns" id="fig-heatmap">
+                        <img src="assets/images/routing_heatmap.png" alt="Routing Heatmap Diagram">
+                        <figcaption><strong>Figure 2:</strong> Routing-weight heatmap over transformer depth for a
+                            validation batch. Rows are layers and columns are routed channels; color intensity indicates
+                            mean routing weight.</figcaption>
+                    </figure>
+                    <div class="page-break-divider span-both-columns"><span>pg. 8</span></div>
+                </div>
+            </section>
+
+            <!-- 7. Limitations -->
+            <section id="limitations">
+                <h2>7. Limitations</h2>
+                <div class="paper-content-columns">
+                    <p>
+                        Additional tasks beyond the initial benchmark sets are needed to establish any generalization.
+                        We only evaluate one logical reasoning benchmark, more would allow us to evaluate
+                        generalization, specifically of the logic expert. The routing design also introduces additional
+                        hyperparameters (gate count, window size, routing sparsity) whose interactions are not yet fully
+                        explored.
+                    </p>
+                </div>
+            </section>
+
+            <!-- 8. Conclusion -->
+            <section id="conclusion">
+                <h2>8. Conclusion</h2>
+                <div class="paper-content-columns">
+                    <p>
+                        This architecture shifts conditional inference from routing among independent neural experts to
+                        routing over operator groups, yielding a novel, compact, and interpretable compositional
+                        mechanism. Across matched-capacity comparisons, results indicate that the routed logic path can
+                        improve over both the backbone Baseline and a parameter-matched No-Gate Control in single-task
+                        runs, with inter-token composition emerging as a strong setting in our current sweeps. In MNLI
+                        transfer and joint 50/50 multi-task training, routed and No-Gate variants are near-parity under
+                        the current setup.
+                    </p>
+                    <p>
+                        Mechanism-level diagnostics (routing entropy and fusion $\alpha$) provide direct visibility into
+                        whether routing is specialized and whether the branch is actually used at prediction time. This
+                        work establishes an implementation-complete foundation for operator-routed reasoning. Immediate
+                        next steps are broader benchmark coverage, and targeted ablations.
+                    </p>
+                    <div class="page-break-divider span-both-columns"><span>pg. 9</span></div>
+                </div>
+            </section>
+
+            <!-- References (inside columns) -->
+            <section id="references" class="references-section">
+                <h2>References</h2>
+                <div class="paper-content-columns">
+                    <ol class="references-list">
+                        <li id="ref-attention-is-all-you-need">[1] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob
+                            Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser, and Illia Polosukhin. <em>Attention
+                                is all you need</em>. In Advances in Neural Information Processing Systems, 2017.</li>
+                        <li id="ref-cot">[2] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Fei Xia, Ed Chi,
+                            Quoc V. Le, and Denny Zhou. <em>Chain-of-thought prompting elicits reasoning in large
+                                language models</em>. In Advances in Neural Information Processing Systems, 2022.</li>
+                        <li id="ref-reasoning">[3] Albert Q. Jiang, Alexandre Sablayrolles, Arthur Mensch, Chris
+                            Bamford, Devendra Singh Chaplot, Diego de las Casas, Florian Bressand, Gianna Lengyel,
+                            Guillaume Lample, Lucile Saulnier, et al. <em>Mistral 7B</em>. arXiv preprint
+                            arXiv:2310.06825, 2023.</li>
+                        <li id="ref-moe-1">[4] Robert A. Jacobs, Michael I. Jordan, Steven J. Nowlan, and Geoffrey E.
+                            Hinton. <em>Adaptive mixtures of local experts</em>. Neural Computation, 3(1):79–87, 1991.
+                        </li>
+                        <li id="ref-moe-2">[5] Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le,
+                            Geoffrey Hinton, and Jeff Dean. <em>Outrageously large neural networks: The sparsely-gated
+                                mixture-of-experts layer</em>. In International Conference on Learning Representations
+                            (ICLR), 2017.</li>
+                        <li id="ref-switch">[6] William Fedus, Barret Zoph, and Noam Shazeer. <em>Switch Transformers:
+                                Scaling to Trillion Parameter Models with Simple and Efficient Sparsity</em>. Journal of
+                            Machine Learning Research, 23(120):1–39, 2022.</li>
+                        <li id="ref-aleksander">[7] Igor Aleksander and Helen Morton. <em>An Introduction to Neural
+                                Computing</em>. Chapman & Hall, 1990.</li>
+                        <li id="ref-diff-logic">[8] Felix Petersen, Christian Borgelt, Hilde Kuehne, and Oliver Deussen.
+                            <em>Deep differentiable logic gate networks</em>. In International Conference on Machine
+                            Learning (ICML), 2022.</li>
+                        <li id="ref-lnn">[9] Ryan Riegel, Alexander Gray, Francois Luus, Naweed Khan, Ndivhuwo Makondo,
+                            Ismail Yunus Akhalwaya, Joydeep Sen, Ronald Fagin, Mikhail Yurochkin, Ulas Rife, et al.
+                            <em>Logical neural networks</em>. arXiv preprint arXiv:2006.13155, 2020.</li>
+                        <li id="ref-dlm">[10] Michael Zimmer, Claire Vernade, and Gergely Neu. <em>Differentiable logic
+                                machines</em>. In International Conference on Artificial Intelligence and Statistics
+                            (AISTATS), 2023.</li>
+                        <li id="ref-fuzzy">[11] Lotfi A. Zadeh. <em>Fuzzy sets</em>. Information and Control,
+                            8(3):338–353, 1965.</li>
+                        <li id="ref-neurosymbolic">[12] Tarek R. Besold, Artur d'Avila Garcez, Sebastian Bader, Howard
+                            Bowman, Pedro Domingos, Pascal Hitzler, Kai-Uwe Kühnberger, Luis C. Lamb, Daniel Lowd,
+                            Priscila Machado Vieira Lima, et al. <em>Neural-symbolic learning and reasoning: A survey
+                                and interpretation</em>. In Neuro-Symbolic Ideas and Applications, 2017.</li>
+                        <li id="ref-llama">[13] Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet,
+                            Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal
+                            Azhar, et al. <em>Llama: Open and efficient foundation language models</em>. arXiv preprint
+                            arXiv:2302.13971, 2023.</li>
+                        <li id="ref-adamw">[14] Ilya Loshchilov and Frank Hutter. <em>Decoupled weight decay
+                                regularization</em>. In International Conference on Learning Representations (ICLR),
+                            2019.</li>
+                        <li id="ref-proofwriter">[15] Oyvind Tafjord, Bhavana Dalvi, and Peter Clark. <em>ProofWriter:
+                                Generating implications, proofs, and judgements for NLI</em>. In Findings of the
+                            Association for Computational Linguistics: EMNLP, 2021.</li>
+                        <li id="ref-mnli">[16] Adina Williams, Nikita Nangia, and Samuel R. Bowman. <em>A broad-coverage
+                                challenge corpus for sentence understanding through inference</em>. In NAACL-HLT, 2018.
+                        </li>
+                        <li id="ref-generalization">[17] Daniel Keysers, Nathanael Schärli, Nathan Scales, Hila Gonen,
+                            Oana-Maria Camburu, Yury Bystrov, Aurelien Boffet, Jaemin Cho, Blaise Aguera y Arcas, and Ed
+                            H. Chi. <em>Measuring compositional generalization: A comprehensive method on realistic
+                                data</em>. In International Conference on Learning Representations (ICLR), 2020.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Appendix (Spans both columns) -->
+            <section id="appendix" class="span-both-columns">
+                <h2>Appendix</h2>
+
+                <div style="column-count: 2; column-gap: 2.25rem;">
+                    <h3>A. ProofWriter Evaluation Details</h3>
+                    <p style="text-indent: 0;">This appendix summarizes the main ProofWriter configuration used in the
+                        experiments.</p>
+                    <h4>A.1. Settings and Hyperparameters</h4>
+                    <ul>
+                        <li>Batch size: 30 (train), 30 (eval)</li>
+                        <li>Epochs: 3</li>
+                        <li>Learning rate: $1\times10^{-5}$</li>
+                        <li>Weight decay: 0.01</li>
+                    </ul>
+                    <h4>A.2. Dataset(s)</h4>
+                    <ul>
+                        <li>ProofWriter Depth: <code>all</code> (all allowed)</li>
+                        <li>Train samples: 10,000</li>
+                        <li>Validation samples: 5,000</li>
+                    </ul>
+
+                    <h3>B. MNLI Evaluation Details</h3>
+                    <p style="text-indent: 0;">For MNLI transfer, labels are remapped into the shared three-class order
+                        used throughout this paper: contradiction $\rightarrow 0$, entailment $\rightarrow 1$, and
+                        neutral $\rightarrow 2$.</p>
+                    <h4>B.1. Dataset(s)</h4>
+                    <ul>
+                        <li>Train samples: 4,000</li>
+                        <li>Validation samples: 200</li>
+                    </ul>
+                    <h4>B.2. Settings and Hyperparameters</h4>
+                    <ul>
+                        <li>Train batch size: 30</li>
+                        <li>Eval batch size: 100</li>
+                        <li>Learning rate: $1\times10^{-5}$</li>
+                        <li>Weight decay: 0.01</li>
+                        <li>Logic dimension / gates / heads: 256 / 8 / 4</li>
+                        <li>Gate mode: <code>soft</code></li>
+                    </ul>
+
+                    <h3>C. Multi-task Evaluation Details</h3>
+                    <p style="text-indent: 0;">For multi-task experiments, each batch is sampled from a mix of
+                        ProofWriter and MNLI datasets.</p>
+                    <h4>C.1. Dataset(s)</h4>
+                    <ul>
+                        <li>MNLI sampling ratio: 0.5</li>
+                        <li>ProofWriter sampling ratio: 0.5</li>
+                        <li>ProofWriter depth: <code>all</code></li>
+                        <li>Train/validation samples: 10,000 / 1,000</li>
+                    </ul>
+                    <h4>C.2. Settings and Hyperparameters</h4>
+                    <ul>
+                        <li>Train batch size: 20</li>
+                        <li>Eval batch size: 100</li>
+                        <li>Epochs: 6</li>
+                        <li>Learning rate: $1\times10^{-5}$</li>
+                        <li>Weight decay: 0.01</li>
+                        <li>Logic dimension / gates / heads: 256 / 8 / 4</li>
+                        <li>Fusion $\alpha$ init: 0.1</li>
+                        <li>Learn fusion $\alpha$: <code>True</code></li>
+                        <li>Gate axis: <code>inter_token</code></li>
+                        <li>Gate mode: <code>soft</code></li>
+                    </ul>
+
+                    <h3>D. Routed-Gate-Only vs No-Gate Evaluation Details</h3>
+                    <p style="text-indent: 0;">This appendix summarizes the overlapping configuration fields for Table
+                        5.</p>
+                    <h4>D.1. Settings and Hyperparameters</h4>
+                    <ul>
+                        <li>Epochs: 6</li>
+                        <li>Learning rate: $1\times10^{-5}$</li>
+                    </ul>
+
+                    <h3>E. ProofWriter Question Example</h3>
+                    <h4>E.1. Rulebase</h4>
+                    <div class="codebox" style="margin-bottom: 1.5rem;">
+                        <pre>triple1: The cow is big.
+triple2: The cow needs the dog.
+triple3: The dog sees the rabbit.
+triple4: The rabbit chases the cow.
+triple5: The rabbit chases the dog.
+triple6: The rabbit is big.
+triple7: The rabbit sees the dog.
+rule1: If the cow is blue and the cow needs the rabbit then the cow needs the dog.
+rule2: If the cow chases the dog then the cow sees the rabbit.
+rule3: If something is big then it chases the dog.</pre>
+                    </div>
+                    <h4>E.2. Question & Answer</h4>
+                    <div class="codebox">
+                        <pre>Question: The cow sees the rabbit?
+Answer: true</pre>
+                    </div>
+                </div>
+            </section>
+
+        </article>
+
+        <!-- Right References Sidebar -->
+        <aside class="paper-refs-sidebar">
+            <h3>References</h3>
+            <ul>
+                <li data-ref="ref-attention-is-all-you-need"><a href="#ref-attention-is-all-you-need"><span class="ref-number">[1]</span> Vaswani et al. — Attention is all you need</a></li>
+                <li data-ref="ref-cot"><a href="#ref-cot"><span class="ref-number">[2]</span> Wei et al. — Chain-of-thought prompting</a></li>
+                <li data-ref="ref-reasoning"><a href="#ref-reasoning"><span class="ref-number">[3]</span> Jiang et al. — Mistral 7B</a></li>
+                <li data-ref="ref-moe-1"><a href="#ref-moe-1"><span class="ref-number">[4]</span> Jacobs et al. — Adaptive mixtures of local experts</a></li>
+                <li data-ref="ref-moe-2"><a href="#ref-moe-2"><span class="ref-number">[5]</span> Shazeer et al. — Sparsely-gated MoE</a></li>
+                <li data-ref="ref-switch"><a href="#ref-switch"><span class="ref-number">[6]</span> Fedus et al. — Switch Transformers</a></li>
+                <li data-ref="ref-aleksander"><a href="#ref-aleksander"><span class="ref-number">[7]</span> Aleksander &amp; Morton — Intro to Neural Computing</a></li>
+                <li data-ref="ref-diff-logic"><a href="#ref-diff-logic"><span class="ref-number">[8]</span> Petersen et al. — Deep differentiable logic gates</a></li>
+                <li data-ref="ref-lnn"><a href="#ref-lnn"><span class="ref-number">[9]</span> Riegel et al. — Logical neural networks</a></li>
+                <li data-ref="ref-dlm"><a href="#ref-dlm"><span class="ref-number">[10]</span> Zimmer et al. — Differentiable logic machines</a></li>
+                <li data-ref="ref-fuzzy"><a href="#ref-fuzzy"><span class="ref-number">[11]</span> Zadeh — Fuzzy sets</a></li>
+                <li data-ref="ref-neurosymbolic"><a href="#ref-neurosymbolic"><span class="ref-number">[12]</span> Besold et al. — Neural-symbolic learning</a></li>
+                <li data-ref="ref-llama"><a href="#ref-llama"><span class="ref-number">[13]</span> Touvron et al. — Llama</a></li>
+                <li data-ref="ref-adamw"><a href="#ref-adamw"><span class="ref-number">[14]</span> Loshchilov &amp; Hutter — AdamW</a></li>
+                <li data-ref="ref-proofwriter"><a href="#ref-proofwriter"><span class="ref-number">[15]</span> Tafjord et al. — ProofWriter</a></li>
+                <li data-ref="ref-mnli"><a href="#ref-mnli"><span class="ref-number">[16]</span> Williams et al. — MNLI corpus</a></li>
+                <li data-ref="ref-generalization"><a href="#ref-generalization"><span class="ref-number">[17]</span> Keysers et al. — Compositional generalization</a></li>
+            </ul>
+        </aside>
+
+    </main>
+
+    <!-- Footer Area -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Steven Cleasby-Mayeda</p>
+            <p class="footer-email">steven.cleasby.mayeda@gmail.com</p>
+            <div class="social-links">
+            <a href="https://github.com/Ancorro" aria-label="Steven's GitHub Profile"><i
+                class="fab fa-github"></i><span>GitHub Profile</span></a>
+            <a href="mailto:steven.cleasby.mayeda@gmail.com" aria-label="Send Email to Steven"><i
+                class="fas fa-envelope"></i><span>Email</span></a>
+            <a href="https://github.com/Ancorro/logic-expert-public" aria-label="Project Repository"><i
+                class="fas fa-code"></i><span>Project Repo</span></a>
+            </div>
+        </div>
+    </footer>
+    <!-- Citation → Right Sidebar Scroll Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.querySelector('.paper-refs-sidebar');
+            const refLinkSelector = '.citation-link[href^="#ref-"], .paper-refs-sidebar a[href^="#ref-"]';
+
+            function getFullReferenceText(refId) {
+                const referenceItem = document.getElementById(refId);
+                if (!referenceItem) return '';
+                return referenceItem.textContent.replace(/\s+/g, ' ').trim();
+            }
+
+            function scrollSidebarToItem(sidebarItem) {
+                if (!sidebar || !sidebarItem) return;
+
+                const sidebarRect = sidebar.getBoundingClientRect();
+                const itemRect = sidebarItem.getBoundingClientRect();
+                const itemTop = itemRect.top - sidebarRect.top + sidebar.scrollTop;
+                const targetScrollTop = itemTop - (sidebar.clientHeight / 2) + (sidebarItem.offsetHeight / 2);
+                const maxScrollTop = Math.max(0, sidebar.scrollHeight - sidebar.clientHeight);
+
+                sidebar.scrollTo({
+                    top: Math.min(Math.max(targetScrollTop, 0), maxScrollTop),
+                    behavior: 'smooth'
+                });
+            }
+
+            function highlightSidebarItem(sidebarItem) {
+                sidebarItem.style.transition = 'background 0.3s ease';
+                sidebarItem.style.background = 'rgba(249, 115, 22, 0.15)';
+                sidebarItem.style.borderRadius = '6px';
+                sidebarItem.style.padding = '0.25rem 0.4rem';
+                sidebarItem.style.margin = '-0.25rem -0.4rem';
+                setTimeout(function () {
+                    sidebarItem.style.background = 'transparent';
+                    setTimeout(function () {
+                        sidebarItem.style.padding = '';
+                        sidebarItem.style.margin = '';
+                    }, 300);
+                }, 1500);
+            }
+
+            function preserveMainScroll(callback) {
+                const scrollX = window.scrollX;
+                const scrollY = window.scrollY;
+
+                function restoreScroll() {
+                    const originalScrollBehavior = document.documentElement.style.scrollBehavior;
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    window.scrollTo(scrollX, scrollY);
+                    document.documentElement.style.scrollBehavior = originalScrollBehavior;
+                }
+
+                callback();
+                restoreScroll();
+
+                requestAnimationFrame(function () {
+                    restoreScroll();
+                });
+
+                setTimeout(function () {
+                    restoreScroll();
+                }, 250);
+            }
+
+            function collapseExpandedReferences() {
+                sidebar.querySelectorAll('li.ref-expanded').forEach(function (item) {
+                    item.classList.remove('ref-expanded');
+                    const fullTextBlock = item.querySelector('.ref-full-text');
+                    if (fullTextBlock) {
+                        fullTextBlock.remove();
+                    }
+                });
+            }
+
+            function expandSidebarReference(sidebarItem, refId) {
+                const wasExpanded = sidebarItem.classList.contains('ref-expanded');
+
+                collapseExpandedReferences();
+
+                if (!wasExpanded) {
+                    const fullReferenceText = getFullReferenceText(refId);
+                    if (fullReferenceText) {
+                        const fullTextBlock = document.createElement('div');
+                        fullTextBlock.className = 'ref-full-text';
+                        fullTextBlock.textContent = fullReferenceText;
+                        sidebarItem.appendChild(fullTextBlock);
+                        sidebarItem.classList.add('ref-expanded');
+                    }
+                }
+            }
+
+            document.addEventListener('click', function (event) {
+                const clickedElement = event.target instanceof Element ? event.target : null;
+                const link = clickedElement ? clickedElement.closest(refLinkSelector) : null;
+                if (!link) return;
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (!sidebar) return;
+
+                const refId = link.getAttribute('href').replace('#', '');
+                const sidebarItem = sidebar.querySelector('li[data-ref="' + refId + '"]');
+                if (!sidebarItem) return;
+
+                preserveMainScroll(function () {
+                    if (sidebar.contains(link)) {
+                        expandSidebarReference(sidebarItem, refId);
+                    }
+
+                    scrollSidebarToItem(sidebarItem);
+                    highlightSidebarItem(sidebarItem);
+                });
+            }, true);
+        });
+    </script>
+
+</body>
+
+</html>

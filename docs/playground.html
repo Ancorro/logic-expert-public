@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallel Logic Expert with Operator Routing | Showcase Page</title>
+
+    <!-- Meta tags for SEO -->
+    <meta name="description"
+        content="A parallel logic-augmented transformer pathway that routes token representations into differentiable fuzzy logical gates to learn composition as an architectural prior. Built with PyTorch and Llama 3.1.">
+    <meta name="keywords"
+        content="PyTorch, Llama 3.1, Mixture of Experts, MoE, Fuzzy Logic, Deep Learning, NLP, Oregon State University, Steven Cleasby-Mayeda">
+    <meta name="author" content="Steven Cleasby-Mayeda">
+
+    <!-- CSS and Fonts -->
+    <link rel="stylesheet" href="index.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Background glow elements -->
+    <div class="bg-glow"></div>
+
+    <!-- Navigation Header -->
+    <header>
+        <div class="paper-container">
+            <a href="index.html" class="logo" id="nav-logo">
+                <span class="logo-mark" aria-hidden="true">
+                    <img src="assets/images/favicon-option-routing.svg" alt="">
+                </span>
+                <span>Parallel Logic Expert Research</span>
+            </a>
+            <div class="nav-buttons">
+                <a href="index.html" class="btn btn-secondary btn-sm" id="btn-nav-paper">
+                    Full Paper
+                </a>
+                <a href="playground.html" class="btn btn-active btn-sm" id="btn-nav-playground" aria-current="page">
+                    Architecture Sandbox
+                </a>
+                <a href="https://github.com/Ancorro/logic-expert-public" class="btn btn-secondary btn-sm"
+                    id="btn-nav-github">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <a href="assets/pdf/Logic_Expert.pdf" class="btn btn-secondary btn-sm" id="btn-nav-download" download>
+                    <i class="fas fa-file-pdf"></i> Download Paper
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+
+        <!-- Interactive Playground Section -->
+        <section id="playground" class="container" style="padding-top: 2rem;">
+
+            <div class="playground-grid">
+
+                <!-- Card 1: Fuzzy Gates Math -->
+                <div class="card interactive-card">
+                    <h3>Fuzzy Gate Calculator</h3>
+                    <p>Fuzzy logic gates operate on real numbers in the [0, 1] interval. Adjust the sliders representing
+                        activation states for two sequential tokens (<i>t</i><sub>1</sub>, <i>t</i><sub>2</sub>) to see
+                        calculated results.</p>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <label for="slider-t1">Token 1 Activation (<i>t</i><sub>1</sub>)</label>
+                            <span class="value-bubble" id="value-t1">0.70</span>
+                        </div>
+                        <input type="range" id="slider-t1" min="0" max="1" step="0.05" value="0.70" aria-valuemin="0"
+                            aria-valuemax="1" aria-valuenow="0.70">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <label for="slider-t2">Token 2 Activation (<i>t</i><sub>2</sub>)</label>
+                            <span class="value-bubble" id="value-t2">0.40</span>
+                        </div>
+                        <input type="range" id="slider-t2" min="0" max="1" step="0.05" value="0.40" aria-valuemin="0"
+                            aria-valuemax="1" aria-valuenow="0.40">
+                    </div>
+
+                    <div class="visualizer-output">
+                        <div class="output-row">
+                            <div class="output-info">
+                                <span>Fuzzy AND Gate</span>
+                                <span id="val-and" class="value-bubble">0.2800</span>
+                            </div>
+                            <span class="output-math">Equation: <i>t</i><sub>1</sub> &middot;
+                                <i>t</i><sub>2</sub></span>
+                            <div class="progress-track" aria-label="AND gate output progress">
+                                <div class="progress-fill" id="fill-and"></div>
+                            </div>
+                        </div>
+
+                        <div class="output-row">
+                            <div class="output-info">
+                                <span>Fuzzy OR Gate</span>
+                                <span id="val-or" class="value-bubble">0.8200</span>
+                            </div>
+                            <span class="output-math">Equation: <i>t</i><sub>1</sub> + <i>t</i><sub>2</sub> -
+                                (<i>t</i><sub>1</sub> &middot; <i>t</i><sub>2</sub>)</span>
+                            <div class="progress-track" aria-label="OR gate output progress">
+                                <div class="progress-fill" id="fill-or"></div>
+                            </div>
+                        </div>
+
+                        <div class="output-row">
+                            <div class="output-info">
+                                <span>Fuzzy NOT Gate (Token 1)</span>
+                                <span id="val-not-1" class="value-bubble">0.3000</span>
+                            </div>
+                            <span class="output-math">Equation: 1 - <i>t</i><sub>1</sub></span>
+                            <div class="progress-track" aria-label="NOT gate token 1 output progress">
+                                <div class="progress-fill success" id="fill-not-1"></div>
+                            </div>
+                        </div>
+
+                        <div class="output-row">
+                            <div class="output-info">
+                                <span>Fuzzy NOT Gate (Token 2)</span>
+                                <span id="val-not-2" class="value-bubble">0.6000</span>
+                            </div>
+                            <span class="output-math">Equation: 1 - <i>t</i><sub>2</sub></span>
+                            <div class="progress-track" aria-label="NOT gate token 2 output progress">
+                                <div class="progress-fill success" id="fill-not-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Softmax / Cutoff Routing -->
+                <div class="card interactive-card">
+                    <h3>Routing Distribution Simulator</h3>
+                    <p>Adjust raw logit projections, temperature (&tau;), and cutoff values to visualize softmax routing
+                        weights, sparsification effects, and renormalization fallback.</p>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <label for="logit-and">AND Channel Logit</label>
+                            <span class="value-bubble" id="val-logit-and">2.0</span>
+                        </div>
+                        <input type="range" id="logit-and" min="-5" max="5" step="0.5" value="2.0" aria-valuemin="-5"
+                            aria-valuemax="5" aria-valuenow="2.0">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <label for="logit-or">OR Channel Logit</label>
+                            <span class="value-bubble" id="val-logit-or">1.0</span>
+                        </div>
+                        <input type="range" id="logit-or" min="-5" max="5" step="0.5" value="1.0" aria-valuemin="-5"
+                            aria-valuemax="5" aria-valuenow="1.0">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <label for="logit-not">NOT Channel Logit</label>
+                            <span class="value-bubble" id="val-logit-not">-1.0</span>
+                        </div>
+                        <input type="range" id="logit-not" min="-5" max="5" step="0.5" value="-1.0" aria-valuemin="-5"
+                            aria-valuemax="5" aria-valuenow="-1.0">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <label for="slider-temp">Softmax Temperature (&tau;)</label>
+                            <span class="value-bubble" id="val-temp">1.00</span>
+                        </div>
+                        <input type="range" id="slider-temp" min="0.1" max="3" step="0.1" value="1.00"
+                            aria-valuemin="0.1" aria-valuemax="3" aria-valuenow="1.00">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <label for="slider-cutoff">Cutoff Threshold (<i>c</i>)</label>
+                            <span class="value-bubble" id="val-cutoff">0.15</span>
+                        </div>
+                        <input type="range" id="slider-cutoff" min="0.0" max="0.8" step="0.05" value="0.15"
+                            aria-valuemin="0.0" aria-valuemax="0.8" aria-valuenow="0.15">
+                    </div>
+
+                    <div class="visualizer-output">
+                        <h4 style="margin-bottom:1rem; font-size:1rem;">Computed Routing Weights</h4>
+
+                        <div class="gate-weight-bars">
+                            <div class="weight-row" id="row-and">
+                                <span class="weight-label" id="lbl-and">AND Bank</span>
+                                <div class="weight-bar-track">
+                                    <div class="weight-bar-fill" id="bar-and"></div>
+                                </div>
+                                <span class="weight-percent" id="pct-and">0.0%</span>
+                            </div>
+
+                            <div class="weight-row" id="row-or">
+                                <span class="weight-label" id="lbl-or">OR Bank</span>
+                                <div class="weight-bar-track">
+                                    <div class="weight-bar-fill" id="bar-or"></div>
+                                </div>
+                                <span class="weight-percent" id="pct-or">0.0%</span>
+                            </div>
+
+                            <div class="weight-row" id="row-not">
+                                <span class="weight-label" id="lbl-not">NOT Bank</span>
+                                <div class="weight-bar-track">
+                                    <div class="weight-bar-fill" id="bar-not"></div>
+                                </div>
+                                <span class="weight-percent" id="pct-not">0.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Empirical Results Section -->
+        <section id="results">
+            <div class="container">
+                <div class="results-intro callout-box">
+                    <h2 id="results-heading">Empirical Evaluation</h2>
+                    <p>Controlled comparisons on the ProofWriter reasoning dataset across 6 training epochs. Backbone is
+                        Llama-3.1-8B, with data budget and optimizers held constant.</p>
+                </div>
+
+                <div class="results-grid">
+                    <div class="table-wrapper">
+                        <table aria-label="Evaluation comparison data table">
+                            <thead>
+                                <tr>
+                                    <th>Epoch</th>
+                                    <th>Baseline Loss</th>
+                                    <th>Baseline Acc</th>
+                                    <th>Logic Loss</th>
+                                    <th>Logic Acc</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0</td>
+                                    <td>1.5740</td>
+                                    <td>27.06%</td>
+                                    <td>1.0931</td>
+                                    <td>36.86%</td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>1.0666</td>
+                                    <td>46.46%</td>
+                                    <td>0.8275</td>
+                                    <td>52.90%</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>1.0622</td>
+                                    <td>46.46%</td>
+                                    <td>0.8158</td>
+                                    <td class="highlight-cell">55.12% (Peak)</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>1.0750</td>
+                                    <td>46.46%</td>
+                                    <td>0.8168</td>
+                                    <td>54.68%</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>1.0658</td>
+                                    <td>46.46%</td>
+                                    <td>0.8313</td>
+                                    <td>52.48%</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>1.0679</td>
+                                    <td>46.46%</td>
+                                    <td>0.8300</td>
+                                    <td>49.44%</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>1.0649</td>
+                                    <td>46.46%</td>
+                                    <td>0.8323</td>
+                                    <td>53.54%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="results-analysis">
+                        <h3>Diagnostic Observations</h3>
+                        <div class="callout-box">
+                            <h4>Baseline Performance Flat</h4>
+                            <p>The baseline model (without a logic stream) gets stuck at 46.46% accuracy. The logic
+                                stream breaks this bottleneck, reaching 55.12% accuracy (+7.08% absolute gain).</p>
+                        </div>
+                        <div class="callout-box">
+                            <h4>Active Fusion Learnings</h4>
+                            <p>During training, the scale parameter <i>&alpha;</i> (initialized to 0.01) increases to
+                                0.01001, demonstrating that gradients reinforce logic contributions.</p>
+                        </div>
+                        <div class="callout-box">
+                            <h4>Computing Parity</h4>
+                            <p>Peak GPU memory is tightly matched (70.65 GB for Logic vs 69.91 GB for Baseline),
+                                confirming the pathway is highly lightweight.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Citation Section -->
+        <section id="citation" class="container">
+            <div class="card citation-card">
+                <div class="citation-header">
+                    <h2 id="citation-heading" style="font-size: 1.5rem;"><i class="fas fa-quote-right"></i> Citation
+                    </h2>
+                    <button class="copy-btn" id="copy-citation-btn"><i class="fas fa-copy"></i> Copy BibTeX</button>
+                </div>
+                <p>If you build upon this work, please cite the course writeup:</p>
+                <div class="codebox" id="citation-code">
+                    <pre>@misc{cleasbymayeda2026logicexpert,
+  author = {Cleasby-Mayeda, Steven},
+  title  = {Parallel Logic Expert with Operator Routing},
+  year   = {2026},
+  note   = {Course project, Oregon State University AI 535}
+}</pre>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Area -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Steven Cleasby-Mayeda</p>
+            <p class="footer-email">steven.cleasby.mayeda@gmail.com</p>
+            <div class="social-links">
+            <a href="https://github.com/Ancorro" aria-label="Steven's GitHub Profile"><i
+                class="fab fa-github"></i><span>GitHub Profile</span></a>
+            <a href="mailto:steven.cleasby.mayeda@gmail.com" aria-label="Send Email to Steven"><i
+                class="fas fa-envelope"></i><span>Email</span></a>
+            <a href="https://github.com/Ancorro/logic-expert-public" aria-label="Project Repository"><i
+                class="fas fa-code"></i><span>Project Repo</span></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript script binding -->
+    <script src="script.js"></script>
+</body>
+
+</html>
