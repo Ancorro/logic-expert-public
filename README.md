@@ -1,6 +1,6 @@
 # Parallel Logic Expert with Operator Routing
 
-**🌐 Interactive project page: [ancorro.github.io/logic-expert-public](https://ancorro.github.io/logic-expert-public/)** — overview, fuzzy-logic calculator, routing simulator, and results.
+**🌐 Interactive project page: [ancorro.github.io/logic-expert](https://ancorro.github.io/logic-expert/)** — overview, fuzzy-logic calculator, routing simulator, and results.
 
 A logic-augmented transformer pathway that routes token-level representations into fixed
 fuzzy logical operators (AND / OR / NOT) — or a straight-through estimator — so the
