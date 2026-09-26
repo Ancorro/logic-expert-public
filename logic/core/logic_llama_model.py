@@ -88,6 +88,7 @@ class LogicLlamaModel(nn.Module):
         fusion_hidden_dim: int = 512,
         alpha_init: float = 0.01,
         learn_fusion_alpha: bool = True,
+        use_cross_attn: bool = True,
         num_labels: int = 2,
     ) -> None:
         super().__init__()
@@ -128,8 +129,13 @@ class LogicLlamaModel(nn.Module):
             no_gate_update_hidden_dim=no_gate_update_hidden_dim,
             no_gate_match_logic_params=no_gate_match_logic_params,
         )
+        # Ablation: use_cross_attn=False feeds the routed stream the projected hidden
+        # state directly (same inputs as the no-gate stream) and builds no cross-attn.
+        self.use_cross_attn = bool(use_cross_attn)
         self.cross_attn = nn.ModuleList(
-            [
+            []
+            if not self.use_cross_attn
+            else [
                 LayerwiseLogicCrossAttention(
                     logic_dim=logic_dim,
                     hidden_dim=hidden_dim,
@@ -321,7 +327,7 @@ class LogicLlamaModel(nn.Module):
                     init_state = init_state * token_mask.unsqueeze(-1).to(dtype=init_state.dtype)
                     state_holder["logic_state"] = init_state
 
-                if self.logic_stream.use_no_gate_stream:
+                if self.logic_stream.use_no_gate_stream or not self.use_cross_attn:
                     projected_logic = self.logic_projection(hidden)
                     projected_logic = projected_logic * token_mask.unsqueeze(-1).to(dtype=projected_logic.dtype)
                     logic_state, routing_weights = self.logic_stream.layers[layer_idx](
@@ -370,7 +376,7 @@ class LogicLlamaModel(nn.Module):
         if missing:
             raise RuntimeError(f"Streaming logic hooks missed routing outputs for layers: {missing}")
         routing_history = [value for value in routing_history_buffer if value is not None]
-        if self.logic_stream.use_no_gate_stream:
+        if self.logic_stream.use_no_gate_stream or not self.use_cross_attn:
             cross_attn_history = []
         else:
             cross_missing = [idx for idx, value in enumerate(cross_attn_history_buffer) if value is None]

@@ -1,0 +1,28 @@
+{
+ "run_model": "logic_llama",
+ "train_max_samples": 10000,
+ "val_max_samples": 5000,
+ "proofwriter_depth": "all",
+ "proofwriter_config": "default",
+ "k_epochs": 3,
+ "train_batch_size": 30,
+ "eval_batch_size": 30,
+ "learning_rate": 1e-05,
+ "weight_decay": 0.01,
+ "max_length": 0,
+ "use_bf16_if_available": true,
+ "logic_dim": 256,
+ "num_gates": 8,
+ "cross_attn_heads": 4,
+ "alpha_init": 0.1,
+ "gate_window_axis": "inter_token",
+ "use_param_matched_baseline": false,
+ "dataset_name": "proofwriter",
+ "learn_fusion_alpha": true,
+ "seed": 123,
+ "run_seeds": [
+  123
+ ],
+ "wandb_project": "logic-expert-verify",
+ "wandb_group": "verify-a01"
+}

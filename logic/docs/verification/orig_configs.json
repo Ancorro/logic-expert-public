@@ -1,0 +1,603 @@
+{
+ "inter8": {
+  "id": "fa3al9os",
+  "name": "logic_inter_gates8",
+  "group": "baser",
+  "config": {
+   "data": {
+    "val_max_samples": 5000,
+    "proofwriter_depth": "all",
+    "train_max_samples": 10000,
+    "proofwriter_config": "default"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "logic_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.01,
+    "fusion_mode": "linear_bridge",
+    "variant_note": "standard",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "use_no_gate_stream": false,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": null,
+    "use_param_matched_baseline": false,
+    "param_matched_no_gate_update_type": null
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 3,
+    "batch_size": 30,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 30,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v5-eval-gate-dim",
+    "run_name": "logic_llama-seed42"
+   }
+  }
+ },
+ "base": {
+  "id": "wy9c4qdh",
+  "name": "baseline_llama",
+  "group": "baser",
+  "config": {
+   "data": {
+    "val_max_samples": 5000,
+    "proofwriter_depth": "all",
+    "train_max_samples": 10000,
+    "proofwriter_config": "default"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "baseline_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.01,
+    "fusion_mode": "linear_bridge",
+    "variant_note": "standard",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "use_no_gate_stream": false,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": null,
+    "use_param_matched_baseline": false,
+    "param_matched_no_gate_update_type": null
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 3,
+    "batch_size": 30,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 30,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v5-eval-gate-dim",
+    "run_name": "baseline_llama-seed42"
+   }
+  }
+ },
+ "nogate": {
+  "id": "p77m4hx7",
+  "name": "augmented_mlp_llama",
+  "group": "baser",
+  "config": {
+   "data": {
+    "val_max_samples": 5000,
+    "proofwriter_depth": "all",
+    "train_max_samples": 10000,
+    "proofwriter_config": "default"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "baseline_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.01,
+    "fusion_mode": "mlp",
+    "variant_note": "baseline_param_matched",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "use_no_gate_stream": true,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": false,
+    "use_param_matched_baseline": true,
+    "param_matched_no_gate_update_type": "mlp"
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 3,
+    "batch_size": 30,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 30,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v5-eval-gate-dim",
+    "run_name": "baseline_llama-seed42"
+   }
+  }
+ },
+ "intra8": {
+  "id": "45o0qen1",
+  "name": "logic_intra_gates8",
+  "group": "baser",
+  "config": {
+   "data": {
+    "val_max_samples": 5000,
+    "proofwriter_depth": "all",
+    "train_max_samples": 10000,
+    "proofwriter_config": "default"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "logic_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.01,
+    "fusion_mode": "linear_bridge",
+    "variant_note": "standard",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "intra_token",
+    "use_no_gate_stream": false,
+    "capacity_window_axis": "intra_token",
+    "no_gate_uses_cross_attn": null,
+    "use_param_matched_baseline": false,
+    "param_matched_no_gate_update_type": null
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 3,
+    "batch_size": 30,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 30,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v5-eval-inter_intra",
+    "run_name": "logic_llama-seed42"
+   }
+  }
+ },
+ "inter16": {
+  "id": "w8fnquk8",
+  "name": "logic_inter_gates16",
+  "group": "baser",
+  "config": {
+   "data": {
+    "val_max_samples": 5000,
+    "proofwriter_depth": "all",
+    "train_max_samples": 10000,
+    "proofwriter_config": "default"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "logic_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 16,
+    "alpha_init": 0.01,
+    "fusion_mode": "linear_bridge",
+    "variant_note": "standard",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "use_no_gate_stream": false,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": null,
+    "use_param_matched_baseline": false,
+    "param_matched_no_gate_update_type": null
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 3,
+    "batch_size": 30,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 30,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v5-eval-inter_intra",
+    "run_name": "logic_llama-seed42"
+   }
+  }
+ },
+ "learn": {
+  "id": "fkv5gltf",
+  "name": "logic_learn_fusion",
+  "group": "baser",
+  "config": {
+   "data": {
+    "val_max_samples": 5000,
+    "proofwriter_depth": "all",
+    "train_max_samples": 10000,
+    "proofwriter_config": "default"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "logic_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.01,
+    "fusion_mode": "linear_bridge",
+    "variant_note": "standard",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "learn_fusion_alpha": true,
+    "use_no_gate_stream": false,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": null,
+    "use_param_matched_baseline": false,
+    "fusion_alpha_effective_value": 0.009999999776482582,
+    "fusion_alpha_effective_trainable": true,
+    "param_matched_no_gate_update_type": null
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 3,
+    "batch_size": 30,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 30,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "baser",
+    "run_name": "logic_llama-seed42"
+   }
+  }
+ },
+ "a01": {
+  "id": "q4zj8fhp",
+  "name": "logic_fusion_pt1",
+  "group": "baser",
+  "config": {
+   "data": {
+    "val_max_samples": 5000,
+    "proofwriter_depth": "all",
+    "train_max_samples": 10000,
+    "proofwriter_config": "default"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "logic_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.1,
+    "fusion_mode": "linear_bridge",
+    "variant_note": "standard",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "learn_fusion_alpha": true,
+    "use_no_gate_stream": false,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": null,
+    "use_param_matched_baseline": false,
+    "fusion_alpha_effective_value": 0.10000000149011612,
+    "fusion_alpha_effective_trainable": true,
+    "param_matched_no_gate_update_type": null
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 3,
+    "batch_size": 30,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 30,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "baser",
+    "run_name": "logic_llama-seed42"
+   }
+  }
+ },
+ "mnli_inter": {
+  "id": "t66n8g2u",
+  "name": "logic_mnli",
+  "group": "v5-eval-mnli",
+  "config": {
+   "data": {
+    "val_max_samples": 500,
+    "proofwriter_depth": "all",
+    "train_max_samples": 5000,
+    "proofwriter_config": "mnli"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "logic_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.1,
+    "fusion_mode": "linear_bridge",
+    "variant_note": "standard",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "learn_fusion_alpha": true,
+    "use_no_gate_stream": false,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": null,
+    "use_param_matched_baseline": false,
+    "fusion_alpha_effective_value": 0.10000000149011612,
+    "fusion_alpha_effective_trainable": true,
+    "param_matched_no_gate_update_type": null
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 2,
+    "batch_size": 20,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 10,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v5-eval-mnli",
+    "run_name": "logic_llama-seed42"
+   }
+  }
+ },
+ "mnli_nogate": {
+  "id": "gucn27u2",
+  "name": "baseline_mnli",
+  "group": "v5-eval-mnli",
+  "config": {
+   "data": {
+    "val_max_samples": 500,
+    "proofwriter_depth": "all",
+    "train_max_samples": 5000,
+    "proofwriter_config": "mnli"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "baseline_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.1,
+    "fusion_mode": "mlp",
+    "variant_note": "baseline_param_matched",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "learn_fusion_alpha": true,
+    "use_no_gate_stream": true,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": false,
+    "use_param_matched_baseline": true,
+    "fusion_alpha_effective_value": 0.10000000149011612,
+    "fusion_alpha_effective_trainable": true,
+    "param_matched_no_gate_update_type": "mlp"
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 2,
+    "batch_size": 20,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 10,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v5-eval-mnli",
+    "run_name": "baseline_llama-seed42"
+   }
+  }
+ },
+ "mnli_intra": {
+  "id": "aapet4cg",
+  "name": "logic_intra",
+  "group": "v5-eval-mnli",
+  "config": {
+   "data": {
+    "val_max_samples": 500,
+    "proofwriter_depth": "all",
+    "train_max_samples": 5000,
+    "proofwriter_config": "mnli"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "logic_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.1,
+    "fusion_mode": "linear_bridge",
+    "variant_note": "standard",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "intra_token",
+    "learn_fusion_alpha": true,
+    "use_no_gate_stream": false,
+    "capacity_window_axis": "intra_token",
+    "no_gate_uses_cross_attn": null,
+    "use_param_matched_baseline": false,
+    "fusion_alpha_effective_value": 0.10000000149011612,
+    "fusion_alpha_effective_trainable": true,
+    "param_matched_no_gate_update_type": null
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 2,
+    "batch_size": 20,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 10,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v5-eval-mnli",
+    "run_name": "logic_llama-seed42"
+   }
+  }
+ },
+ "multi_logic": {
+  "id": "ckb9q7ut",
+  "name": "big_logic",
+  "group": "v6-eval-multi",
+  "config": {
+   "data": {
+    "val_max_samples": 1000,
+    "proofwriter_depth": "all",
+    "train_max_samples": 10000,
+    "proofwriter_config": "default"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "logic_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.1,
+    "fusion_mode": "linear_bridge",
+    "variant_note": "standard",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "learn_fusion_alpha": true,
+    "use_no_gate_stream": false,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": null,
+    "use_param_matched_baseline": false,
+    "fusion_alpha_effective_value": 0.10000000149011612,
+    "fusion_alpha_effective_trainable": true,
+    "param_matched_no_gate_update_type": null
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 6,
+    "batch_size": 20,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 100,
+    "multitask_enabled": true,
+    "multitask_pw_ratio": 0.5,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v6-eval-multi",
+    "run_name": "logic_llama-seed42"
+   }
+  }
+ },
+ "multi_nogate": {
+  "id": "xa5kmu55",
+  "name": "big_baseline",
+  "group": "v6-eval-multi",
+  "config": {
+   "data": {
+    "val_max_samples": 1000,
+    "proofwriter_depth": "all",
+    "train_max_samples": 10000,
+    "proofwriter_config": "default"
+   },
+   "model": {
+    "lora": {
+     "enabled": false
+    },
+    "name": "meta-llama/Llama-3.1-8B",
+    "variant": "baseline_llama",
+    "gate_mode": "soft",
+    "logic_dim": 256,
+    "num_gates": 8,
+    "alpha_init": 0.1,
+    "fusion_mode": "mlp",
+    "variant_note": "baseline_param_matched",
+    "routing_top_k": null,
+    "cross_attn_heads": 4,
+    "gate_window_axis": "inter_token",
+    "learn_fusion_alpha": true,
+    "use_no_gate_stream": true,
+    "capacity_window_axis": "inter_token",
+    "no_gate_uses_cross_attn": false,
+    "use_param_matched_baseline": true,
+    "fusion_alpha_effective_value": 0.10000000149011612,
+    "fusion_alpha_effective_trainable": true,
+    "param_matched_no_gate_update_type": "mlp"
+   },
+   "train": {
+    "seed": 42,
+    "epochs": 6,
+    "batch_size": 20,
+    "max_length": 0,
+    "weight_decay": 0.01,
+    "learning_rate": 1e-05,
+    "eval_batch_size": 100,
+    "multitask_enabled": true,
+    "multitask_pw_ratio": 0.5,
+    "use_bf16_if_available": true
+   },
+   "wandb": {
+    "group": "v6-eval-multi",
+    "run_name": "baseline_llama-seed42"
+   }
+  }
+ }
+}

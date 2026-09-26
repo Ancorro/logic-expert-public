@@ -180,6 +180,12 @@ def load_proofwriter(
             if context and question:
                 return f"{context}\nQuestion: {question}"
             return context if context else str(ex)
+    elif "theory" in ds.column_names:
+        # tasksource/proofwriter keeps the rulebase (facts + rules) in `theory`.
+        def to_text(ex):
+            theory = str(ex["theory"]).strip()
+            question = str(ex["question"]).strip()
+            return f"{theory}\nQuestion: {question}"
     elif any(c in ds.column_names for c in ("facts", "rules", "question")):
         def to_text(ex):
             facts = str(ex["facts"]).strip() if "facts" in ex else ""
@@ -235,6 +241,8 @@ def load_proofwriter(
             return int(ex["label"])
 
     tokenizer = get_tokenizer(model_name)
+    # The question sits at the end of the text; truncate the rulebase instead of the question.
+    tokenizer.truncation_side = "left"
 
     def collate(examples):
         texts = [to_text(ex) for ex in examples]
