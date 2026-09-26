@@ -849,6 +849,28 @@ def run_training(model: torch.nn.Module, name: str, epochs: int, wandb_run=None)
 
     return history
 
+
+# --- injected by nb2py: after training, save mean routing weights [layers, 3G] on one val batch ---
+_orig_run_training = run_training
+def run_training(model, *a, **kw):
+    out = _orig_run_training(model, *a, **kw)
+    try:
+        import numpy as _vnp, os as _vos
+        _vb = next(iter(val_loader))
+        model.eval()
+        with torch.no_grad(), torch.autocast("cuda", dtype=amp_dtype):
+            _vo = model(input_ids=_vb["input_ids"].to(device), attention_mask=_vb["attention_mask"].to(device))
+        _rh = getattr(_vo, "routing_history", None) or []
+        if _rh and _rh[0].shape[-1] > 1:
+            _m = _vb["attention_mask"].to(device).unsqueeze(-1).float()
+            _arr = _vnp.stack([((r.float() * _m).sum((0, 1)) / _m.sum()).cpu().numpy() for r in _rh])
+            _vnp.save(_vos.environ["VERIFY_OUT"].replace(".json", "_routing.npy"), _arr)
+            print("VERIFY routing heatmap saved", _arr.shape)
+    except Exception as _e:
+        print("VERIFY routing heatmap skipped:", repr(_e))
+    return out
+
+
 # Run one selected model across multiple seeds for K epochs (sequentially)
 K_EPOCHS = CFG.k_epochs
 base_model_name = selected_model_name
