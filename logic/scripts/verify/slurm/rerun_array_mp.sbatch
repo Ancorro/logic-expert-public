@@ -1,20 +1,20 @@
 #!/bin/bash
-# One verification rerun per array index; index N = line N+1 of manifest/jobs.txt.
+# 2-GPU (A40) variant of rerun_array.sbatch. One verification rerun per array index; index N = line N+1 of manifest/jobs.txt.
 # Submit:  sbatch --array=0-68%8 $ROOT/repo-fixed/logic/scripts/verify/slurm/rerun_array.sbatch
 # Column 3 of jobs.txt picks the code tree: repo-orig (published loader, rulebase dropped)
 # or repo-fixed (theory+question).
 # Resumable: a job whose result JSON already exists exits immediately.
-#SBATCH -J lv-rerun
+#SBATCH -J lv-rerun-mp
 #SBATCH -A eecs
-#SBATCH -p dgxh
-#SBATCH --exclude=dgxh-1
-#SBATCH --gres=gpu:1
+#SBATCH -p ampere
+#SBATCH --gres=gpu:2
 #SBATCH -c 8
 #SBATCH --mem=128G
 #SBATCH -t 08:00:00
 #SBATCH -o /nfs/hpc/share/cleasbys/logic-verify/logs/%x_%A_%a.out
 
 set -eo pipefail
+export VERIFY_MP=1   # 2x A40 48GB: split backbone layers across both GPUs
 source /nfs/hpc/share/cleasbys/logic-verify/repo-fixed/logic/scripts/verify/slurm/_env.sh
 read -r NAME NB TREE < <(sed -n "$((SLURM_ARRAY_TASK_ID + 1))p" "$ROOT/repo-fixed/logic/scripts/verify/manifest/jobs.txt")
 V=$ROOT/repo-$TREE/logic/scripts/verify

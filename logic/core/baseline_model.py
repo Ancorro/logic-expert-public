@@ -9,6 +9,8 @@ import torch
 from torch import nn
 from transformers import AutoModel
 
+from .logic_llama_model import _detect_causal
+
 
 @dataclass
 class BaselineModelOutput:
@@ -41,8 +43,17 @@ class BaselineModel(nn.Module):
         if backbone is None:
             backbone = AutoModel.from_pretrained(model_name)
         self.backbone = backbone
+        self._causal = _detect_causal(self.backbone.config)
+        self._head_device: Optional[str] = None
         hidden_dim = int(self.backbone.config.hidden_size)
         self.task_head = nn.Linear(hidden_dim, num_labels)
+
+    def enable_model_parallel(self, devices: list[str]) -> None:
+        """Split backbone layers across ``devices``; the head stays on ``devices[0]``."""
+        from .model_parallel import dispatch_backbone
+
+        self._head_device = dispatch_backbone(self.backbone, devices)
+        self.task_head.to(self._head_device)
 
     def _align_task_head_to(self, ref: torch.Tensor) -> None:
         """Keep task head on the same runtime device+dtype as backbone outputs."""
@@ -95,11 +106,19 @@ class BaselineModel(nn.Module):
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> BaselineModelOutput:
         """Run baseline forward pass and return logits.
 
-        Uses the first-token representation from ``last_hidden_state`` as pooled
-        features before the classifier head.
+        Pools the last non-padding token for causal/decoder backbones (as
+        ``LogicLlamaModel`` does) and position 0 for encoders. Pooling position 0 on a
+        causal model sees only the BOS token, which makes the classifier input-blind.
         """
         outputs = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
-        hidden = outputs.last_hidden_state[:, 0, :]
+        last_hidden = outputs.last_hidden_state
+        if self._head_device is not None:
+            last_hidden = last_hidden.to(self._head_device)
+        if self._causal:
+            seq_lens = attention_mask.to(last_hidden.device).sum(dim=1) - 1
+            hidden = last_hidden[torch.arange(last_hidden.size(0), device=last_hidden.device), seq_lens]
+        else:
+            hidden = last_hidden[:, 0, :]
         self._align_task_head_to(hidden)
         logits = self.task_head(hidden)
         return BaselineModelOutput(logits=logits)

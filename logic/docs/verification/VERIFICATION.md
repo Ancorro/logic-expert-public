@@ -102,6 +102,28 @@ Consequences:
 - **Baseline collapse check:** compute the validation class prior. If Baseline accuracy
   equals the majority-class rate, the paper must say so.
 
+### 3a. Second bug: the Baseline is input-blind by construction
+
+`BaselineModel.forward` pooled `last_hidden_state[:, 0, :]`. For a causal decoder
+(Llama), position 0 is the BOS token, and under causal attention it cannot attend to any
+later token. The pooled vector is therefore identical for every input, and the head can
+only learn the class prior. That is why every Baseline run sits at exactly 0.4646 (the
+majority class) from epoch 1 onward. `LogicLlamaModel` correctly pools the last
+non-padding token, so the paper's Baseline vs. logic comparison was never a comparison of
+architectures. Fix (Track B, `repo-fixed`): `BaselineModel` now pools the last non-padding
+token for causal backbones, the same rule as `LogicLlamaModel`. Track A keeps the
+published pooling.
+
+### 3a'. Hardware for reruns
+
+`dgxh` (H100 80GB) had a ~900-job backlog with an estimated start more than 24 h out, so an
+opt-in 2-GPU path was added (`VERIFY_MP=1`, `logic/core/model_parallel.py`). The backbone
+layers are split across 2x A40 48GB in one process with accelerate `dispatch_model`, and
+the logic modules and head sit on GPU 0. The computation is identical to one GPU; there
+is no sharding or distributed reduction. A tiny-model fp64 check gave |Δlogits| < 2e-7.
+Jobs are submitted to both partitions with atomic claims (`claims/<job>`). The partition
+and node of every run are recorded in `claims/<job>.where` and reported with the results.
+
 ### 3b. When the bug entered
 
 - 2026-03-12 to 03-13: the loader used `longface/ProofWriter` (columns `facts, rules, question, ...`).

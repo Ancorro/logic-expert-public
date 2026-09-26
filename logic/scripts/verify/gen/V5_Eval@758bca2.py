@@ -850,6 +850,15 @@ def run_training(model: torch.nn.Module, name: str, epochs: int, wandb_run=None)
     return history
 
 
+# --- injected by nb2py: optional 2-GPU layer-wise model parallelism (VERIFY_MP=1) ---
+import os as _vos2
+if _vos2.environ.get("VERIFY_MP") == "1":
+    _orig_build_model = build_model
+    def build_model(name):
+        _n, _m = _orig_build_model(name)
+        _m.enable_model_parallel(["cuda:0", "cuda:1"])
+        print("VERIFY: model-parallel over cuda:0,cuda:1;", {d: round(torch.cuda.memory_allocated(d) / 2**30, 1) for d in (0, 1)}, "GiB")
+        return _n, _m
 # --- injected by nb2py: after training, save mean routing weights [layers, 3G] on one val batch ---
 _orig_run_training = run_training
 def run_training(model, *a, **kw):

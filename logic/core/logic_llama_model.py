@@ -187,6 +187,16 @@ class LogicLlamaModel(nn.Module):
         else:
             self.pre_head_norm = nn.LayerNorm(hidden_dim)
         self.task_head = nn.Linear(hidden_dim, num_labels)
+        self._logic_device: Optional[str] = None
+
+    def enable_model_parallel(self, devices: list[str]) -> None:
+        """Split backbone layers across ``devices``; logic modules and head stay on ``devices[0]``."""
+        from .model_parallel import dispatch_backbone
+
+        self._logic_device = dispatch_backbone(self.backbone, devices)
+        for module in (self.logic_projection, self.logic_stream, self.cross_attn,
+                       self.fusion, self.pre_head_norm, self.task_head):
+            module.to(self._logic_device)
 
     def _infer_backbone_layer_stack(self) -> Optional[list[nn.Module]]:
         """Find the ordered transformer block stack for common HF backbone layouts."""
@@ -316,6 +326,8 @@ class LogicLlamaModel(nn.Module):
         def _make_hook(layer_idx: int):
             def _hook(_module: nn.Module, _inputs: tuple, output: torch.Tensor | tuple | list):
                 hidden = self._extract_hidden_from_layer_output(output)
+                if self._logic_device is not None:
+                    hidden = hidden.to(self._logic_device)
                 if hidden.ndim != 3:
                     raise RuntimeError(
                         f"Expected hidden states [B,S,H] from backbone layer {layer_idx}, got {tuple(hidden.shape)}"
@@ -368,6 +380,8 @@ class LogicLlamaModel(nn.Module):
                 handle.remove()
 
         llm_hidden = outputs.last_hidden_state
+        if self._logic_device is not None:
+            llm_hidden = llm_hidden.to(self._logic_device)
         logic_state = state_holder["logic_state"]
         if logic_state is None:
             raise RuntimeError("Streaming logic hooks did not produce a logic state")
