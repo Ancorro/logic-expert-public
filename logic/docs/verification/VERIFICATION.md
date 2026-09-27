@@ -251,7 +251,9 @@ Secondary comparisons, all with the same test (mean > 0 and > 2 SE):
 
 **Kill criterion outcome:** on the task it was designed for, routing gives no measurable gain
 over a parameter-matched control, and neither does cross-attention. The abstract and conclusion are
-rewritten as a null result. No retuning was done.
+rewritten as a null result for routing. No retuning was done. (Revised framing, 2026-09-27: the
+abstract and conclusion now lead with the supported No-Gate > Baseline gain, +1.4 pp, and state that
+the logic operators add nothing beyond it. The data and the tests are unchanged.)
 
 ### 4.3 MNLI (verification of published values; rerun on the published loader, which is unaffected)
 

@@ -16,11 +16,12 @@ classification — imposing a structured, interpretable composition over token f
 > Author: **Steven Cleasby-Mayeda** — Oregon State University
 > Paper (CVPR-style writeup): [`logic/LaTeX_dir/latex/Logic_Expert.pdf`](logic/LaTeX_dir/latex/Logic_Expert.pdf)
 
-> **Revised 2026-09-27 (null result).** A re-verification found that the ProofWriter loader
+> **Revised 2026-09-27.** A re-verification found that the ProofWriter loader
 > dropped the rulebase (the model saw only the question) and that the Baseline pooled the BOS
-> token. With both fixed and 3 seeds per model, every variant reaches 0.93–0.94 on ProofWriter,
-> and routing does not beat the parameter-matched No-Gate Control (−1.3 pp for inter-token
-> G=8). The paper has been revised accordingly. Details, per-run logs and the pre-registered
+> token. With both fixed and 3 seeds per model, every variant reaches 0.93–0.94 on ProofWriter.
+> The parallel branch with its fusion head beats the linear-head Baseline by +1.4 pp in every
+> seed (SE 0.2), but the logic operators add nothing on top: routing does not beat the
+> parameter-matched No-Gate Control (−1.3 pp for inter-token G=8). The paper has been revised accordingly. Details, per-run logs and the pre-registered
 > protocol: [`logic/docs/verification/VERIFICATION.md`](logic/docs/verification/VERIFICATION.md).
 
 ---
