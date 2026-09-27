@@ -103,9 +103,10 @@ def main(orig_path: str, out_dir: str) -> None:
             o.update({"seed": seed, "run_seeds": [seed],
                       "wandb_project": "logic-expert-verify", "wandb_group": f"verify-{key}"})
             name = f"{key}_s{seed}"
-            json.dump(o, open(os.path.join(out_dir, f"{name}.json"), "w"), indent=1)
+            # LF endings: these files are read by bash on the cluster.
+            json.dump(o, open(os.path.join(out_dir, f"{name}.json"), "w", newline="\n"), indent=1)
             jobs.append(f"{name} {nb} {tree}")
-    open(os.path.join(out_dir, "jobs.txt"), "w").write("\n".join(jobs) + "\n")
+    open(os.path.join(out_dir, "jobs.txt"), "w", newline="\n").write("\n".join(jobs) + "\n")
     print(len(jobs), "jobs")
 
 
