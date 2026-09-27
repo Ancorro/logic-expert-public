@@ -38,7 +38,7 @@ FIX_NB = "V6_multi_eval@7172b79"
 FIX_SINGLE = {"enable_multitask_training": False, "enable_gradient_checkpointing": True,
               "gate_mode": "soft", "dataset_name": "proofwriter"}
 FIXED = {  # key -> (source row for base config, extra overrides)
-    "fix_base":           ("base",    {}),
+    "fix_base":           ("base",    {"learn_fusion_alpha": False}),  # no alpha; V6 guard
     "fix_nogate":         ("nogate",  {"learn_fusion_alpha": False}),
     "fix_intra8":         ("intra8",  {"learn_fusion_alpha": False}),
     "fix_inter8":         ("inter8",  {"learn_fusion_alpha": False}),

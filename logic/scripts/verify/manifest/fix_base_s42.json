@@ -21,6 +21,7 @@
  "enable_multitask_training": false,
  "enable_gradient_checkpointing": true,
  "gate_mode": "soft",
+ "learn_fusion_alpha": false,
  "seed": 42,
  "run_seeds": [
   42
