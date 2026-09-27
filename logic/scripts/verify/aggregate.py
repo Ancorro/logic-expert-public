@@ -2,7 +2,10 @@
 
 Usage: python aggregate.py RESULTS_DIR OUT_DIR
 RESULTS_DIR holds <key>_s<seed>.json (+ optional _routing.npy) harvested from the HPC.
-Multi-task per-task accuracies are read from the rerun's W&B summary.
+Multi-task per-task accuracies come from the final history row (val_{proofwriter,mnli}_acc_final).
+Only MNLI rows are compared with published values: the published ProofWriter numbers were
+measured on question-only inputs (see VERIFICATION.md 2b), so the corrected track has no
+published counterpart and is reported next to them instead.
 """
 import glob
 import json
@@ -52,24 +55,10 @@ def load(results_dir):
             acc=fr.get("val_acc"), loss=fr.get("val_loss"), alpha=fr.get("fusion_alpha"),
             entropy=fr.get("routing_entropy"), grad=fr.get("grad_norm"),
             peak_mem=fr.get("peak_gpu_mem_gb"), epoch_sec=fr.get("epoch_sec"),
+            pw_acc=fr.get("val_proofwriter_acc_final"), mnli_acc=fr.get("val_mnli_acc_final"),
             wandb_id=res.get("wandb_run_id"), n_val=res["overrides"].get("val_max_samples"),
             history=[(r["epoch"], r.get("val_acc")) for r in res["history"]])
     return runs
-
-
-def add_multitask(runs):
-    keys = [k for k in runs if "multi_" in k]
-    if not keys:
-        return
-    import wandb
-    api = wandb.Api(timeout=60)
-    for k in keys:
-        for seed, r in runs[k].items():
-            if not r["wandb_id"]:
-                continue
-            s = api.run(f"{ENTITY}/logic-expert-verify/{r['wandb_id']}").summary._json_dict
-            r["pw_acc"] = s.get("val/proofwriter_acc_final")
-            r["mnli_acc"] = s.get("val/mnli_acc_final")
 
 
 def ms(vals):
@@ -96,13 +85,12 @@ def paired(runs, a, b, metric="acc"):
 def main(results_dir, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     runs = load(results_dir)
-    add_multitask(runs)
     lines, summary = [], {}
     lines.append("| Row | Track | n | Val acc | Val loss | alpha | Routing H | Grad norm | Peak GB | s/epoch |")
     lines.append("|---|---|---|---|---|---|---|---|---|---|")
     order = ["base", "nogate", "intra8", "inter8", "a01", "learn", "inter16", "noxattn_inter8",
              "multi_nogate", "multi_logic", "mnli_nogate", "mnli_intra", "mnli_inter"]
-    for track, prefix in (("B corrected", "fix_"), ("A as-published", "")):
+    for track, prefix in (("corrected", "fix_"), ("as-published", "")):
         for base in order:
             k = prefix + base
             if k not in runs:
@@ -119,11 +107,11 @@ def main(results_dir, out_dir):
                 lines[-1] += f" MNLI {fmt(*row['mnli_acc'][:2])}"
 
     # Verification of published numbers against Track A (pre-registered rule).
-    ver = ["", "| Row | Paper acc | Rerun acc (A) | Seed-42 rerun | Original W&B | Tolerance | Verified |", "|---|---|---|---|---|---|---|"]
-    for base, (pacc, _) in {**PAPER, **{k: (v[0], None) for k, v in PAPER_MULTI.items()}}.items():
+    ver = ["", "| Row | Paper acc | Rerun acc | Seed-42 rerun | Original W&B | Tolerance | Verified |", "|---|---|---|---|---|---|---|"]
+    for base, (pacc, _) in PAPER.items():
         if base not in runs:
             continue
-        metric = "pw_acc" if base.startswith("multi_") else "acc"
+        metric = "acc"
         m, sd, n = ms([r.get(metric) for r in runs[base].values()])
         if m is None:
             continue
@@ -143,8 +131,11 @@ def main(results_dir, out_dir):
         "H2 inter8 vs no-cross-attn (corrected)": paired(runs, "fix_inter8", "fix_noxattn_inter8"),
         "routed intra8 > No-Gate (corrected)": paired(runs, "fix_intra8", "fix_nogate"),
         "No-Gate > Baseline (corrected)": paired(runs, "fix_nogate", "fix_base"),
-        "question-only: inter8 > No-Gate (A)": paired(runs, "inter8", "nogate"),
-        "question-only: inter8 vs no-cross-attn (A)": paired(runs, "inter8", "noxattn_inter8"),
+        "Routed inter16 > No-Gate (corrected)": paired(runs, "fix_inter16", "fix_nogate"),
+        "multi-task Routed > No-Gate, ProofWriter (corrected)": paired(runs, "fix_multi_logic", "fix_multi_nogate", "pw_acc"),
+        "multi-task Routed > No-Gate, MNLI (corrected)": paired(runs, "fix_multi_logic", "fix_multi_nogate", "mnli_acc"),
+        "MNLI Routed inter > No-Gate": paired(runs, "mnli_inter", "mnli_nogate"),
+        "MNLI Routed intra > No-Gate": paired(runs, "mnli_intra", "mnli_nogate"),
     }
     summary["tests"] = tests
     tl = ["", "| Comparison (seed-paired acc diff) | n | mean diff | SE | supported (mean>0 and >2SE) |", "|---|---|---|---|---|"]
@@ -168,19 +159,20 @@ def figures(runs, results_dir, out_dir):
     rows = ["base", "nogate", "intra8", "inter8", "a01", "learn", "inter16", "noxattn_inter8"]
     fig, ax = plt.subplots(figsize=(9, 4.2))
     x = np.arange(len(rows))
-    for off, prefix, color, name in ((-0.18, "", "#9aa3ad", "as-published (question only)"),
-                                     (0.18, "fix_", "#2f6db5", "corrected (theory + question)")):
-        means = [ms([r["acc"] for r in runs.get(prefix + k, {}).values()])[0] for k in rows]
-        ax.bar(x + off, [m if m is not None else 0 for m in means], 0.34, color=color, label=name)
-        for i, k in enumerate(rows):
-            for r in runs.get(prefix + k, {}).values():
-                ax.plot(x[i] + off, r["acc"], "o", color="black", ms=3)
+    ax.bar(x - 0.18, [PAPER.get(k, (0,))[0] for k in rows], 0.34, color="#9aa3ad",
+           label="published (question-only inputs, 1 run)")
+    means = [ms([r["acc"] for r in runs.get("fix_" + k, {}).values()])[0] for k in rows]
+    ax.bar(x + 0.18, [m if m is not None else 0 for m in means], 0.34, color="#2f6db5",
+           label="corrected rerun (theory + question, mean of 3 seeds)")
+    for i, k in enumerate(rows):
+        for r in runs.get("fix_" + k, {}).values():
+            ax.plot(x[i] + 0.18, r["acc"], "o", color="black", ms=3)
     ax.axhline(0.4646, ls="--", color="#c0392b", lw=1, label="majority class (val, seed 42)")
     ax.set_xticks(x, [LABEL[k].replace("Routed ", "R. ") for k in rows], rotation=25, ha="right", fontsize=8)
     ax.set_ylabel("ProofWriter val accuracy (final epoch)")
     ax.set_ylim(0.2, 1.0)
     ax.legend(fontsize=8, loc="upper left")
-    ax.set_title("ProofWriter reruns, 3 seeds (dots = seeds)")
+    ax.set_title("ProofWriter: published vs corrected rerun (dots = seeds)")
     fig.tight_layout()
     fig.savefig(os.path.join(out_dir, "proofwriter_reruns.png"), dpi=200)
 
