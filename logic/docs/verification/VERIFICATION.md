@@ -293,7 +293,8 @@ pre-registered follow-up, but it does not override H1.
 - **Gradient norms** (mean over the final epoch): Baseline 28.5, No-Gate 20.3, routed 19.6 to 22.9.
   The published "routed variants have markedly lower gradient norms" pattern shrinks to
   "anything with the fusion head has lower norms than the Baseline".
-- **Training length.** Corrected accuracy is still rising at epoch 3 in every row. The paper's
+- **Training length.** Corrected accuracy still rose from epoch 2 to 3 in 17 of 24 single-task
+  runs and fell by less than 1 pp in the other 7 (largest drop 0.9 pp). The paper's
   claim that "longer training only decreased accuracy due to overfitting" came from the
   question-only setting and is removed.
 

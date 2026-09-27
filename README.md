@@ -16,6 +16,13 @@ classification — imposing a structured, interpretable composition over token f
 > Author: **Steven Cleasby-Mayeda** — Oregon State University
 > Paper (CVPR-style writeup): [`logic/LaTeX_dir/latex/Logic_Expert.pdf`](logic/LaTeX_dir/latex/Logic_Expert.pdf)
 
+> **Revised 2026-09-27 (null result).** A re-verification found that the ProofWriter loader
+> dropped the rulebase (the model saw only the question) and that the Baseline pooled the BOS
+> token. With both fixed and 3 seeds per model, every variant reaches 0.93–0.94 on ProofWriter,
+> and routing does not beat the parameter-matched No-Gate Control (−1.3 pp for inter-token
+> G=8). The paper has been revised accordingly. Details, per-run logs and the pre-registered
+> protocol: [`logic/docs/verification/VERIFICATION.md`](logic/docs/verification/VERIFICATION.md).
+
 ---
 
 ## Highlights
@@ -105,10 +112,16 @@ logits = model(input_ids, attention_mask=attention_mask).logits
 
 ## Reproducing the paper runs
 
-The exact configs used to produce the paper's intra-token and inter-token comparisons
-live under [`logic/docs/paper/run_configs/`](logic/docs/paper/run_configs/). Each
-directory contains matched `base.yaml` / `logic.yaml` pairs so the only delta between a
-baseline and a logic-augmented run is the logic pathway itself.
+The revised paper's numbers come from the verification harness in
+[`logic/scripts/verify/`](logic/scripts/verify/): pinned driver notebooks, a manifest built
+from the original W&B configs, Slurm array scripts, and `aggregate.py` /
+`make_tex_tables.py`, which regenerate every table and figure from
+`logic/docs/verification/results/raw/`. See
+[`VERIFICATION.md`](logic/docs/verification/VERIFICATION.md) for the exact commands.
+
+The earlier YAML configs under [`logic/docs/paper/run_configs/`](logic/docs/paper/run_configs/)
+contain matched `base.yaml` / `logic.yaml` pairs for the intra-token and inter-token
+comparisons of the first version.
 
 ## Citation
 
