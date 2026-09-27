@@ -48,10 +48,13 @@ def main(results_dir):
         out.append(f"{name} & {pm(d['acc'])} & {pm(d['loss'])} & {alpha} & {norm_entropy(k, d['entropy'])} "
                    f"& {d['grad']['mean']:.1f} & {pub} \\\\")
 
-    out.append("\n% Table 2: trainable parameters (from the rerun JSONs)")
+    out.append("\n% Table 2: trainable and used-in-forward parameters (from the rerun JSONs)")
+    # The No-Gate Control builds cross-attention it never calls; its size is the G=8 with/without-xattn gap.
+    xattn = params["fix_inter8"] - params["fix_noxattn_inter8"]
     for name, k in (("Baseline", "fix_base"), ("No-Gate Control", "fix_nogate"), ("Routed (G=8)", "fix_inter8"),
                     ("Routed (G=16)", "fix_inter16"), ("Routed (G=8), no cross-attn", "fix_noxattn_inter8")):
-        out.append(f"{name} & {params[k]:,} \\\\")
+        used = params[k] - xattn if k == "fix_nogate" else params[k]
+        out.append(f"{name} & {params[k]:,} & {used:,} \\\\")
 
     out.append("\n% Table 3: MNLI (mean +- SD, 3 seeds; val n=500)")
     for name, k in (("No-Gate Control", "mnli_nogate"), ("Routed (intra, G=8)", "mnli_intra"),

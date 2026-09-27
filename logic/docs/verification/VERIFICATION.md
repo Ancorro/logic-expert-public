@@ -248,6 +248,19 @@ Secondary comparisons, all with the same test (mean > 0 and > 2 SE):
   Baseline by more than the parallel branch: it also has the fusion MLP and an RMSNorm before
   the head, while the Baseline puts a linear head directly on the last token. The gain belongs
   to that whole head path, not to parallel capacity alone.
+- Post hoc (added 2026-09-27, not pre-registered): routed inter G=8 without cross-attention vs
+  No-Gate: -0.2 pp (SE 0.35; +0.5, -0.7, -0.5). This is the tightest gates-vs-MLP comparison,
+  see "Parameter matching" below.
+
+**Parameter matching (found 2026-09-27).** The No-Gate Control is built with
+`use_cross_attn=True` (the default), so its cross-attention modules exist and count as trainable,
+but its forward pass never calls them (`logic_llama_model.py`, the `use_no_gate_stream` branch).
+Its 7,582,192,483 trainable parameters include 71,344,128 unused cross-attention weights
+(= inter8 minus no-cross-attn inter8), so it uses 7,510,848,355. By used parameters it matches the
+routed model without cross-attention (0.04% apart), and routed models with cross-attention use 71M
+more than the control. The first-round paper called the control parameter-matched to the routed
+models by trainable count. The revised paper reports both counts (Table 2). No runs are affected.
+The fourth cell (No-Gate with cross-attention) was not run.
 
 **Kill criterion outcome:** on the task it was designed for, routing gives no measurable gain
 over a parameter-matched control, and neither does cross-attention. The abstract and conclusion are

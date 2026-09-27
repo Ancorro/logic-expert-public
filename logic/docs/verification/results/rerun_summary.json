@@ -744,6 +744,19 @@
    "se": 0.0019008769905844288,
    "supported": false
   },
+  "post hoc: routed inter8 no-cross-attn > No-Gate, used params matched (corrected)": {
+   "a": "fix_noxattn_inter8",
+   "b": "fix_nogate",
+   "n": 3,
+   "diffs": [
+    0.0048000000000000265,
+    -0.00660000000000005,
+    -0.0046000000000000485
+   ],
+   "mean": -0.0021333333333333573,
+   "se": 0.003514414760825945,
+   "supported": false
+  },
   "No-Gate > Baseline (corrected)": {
    "a": "fix_nogate",
    "b": "fix_base",

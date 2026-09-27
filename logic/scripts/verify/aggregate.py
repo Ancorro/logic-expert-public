@@ -130,6 +130,8 @@ def main(results_dir, out_dir):
         "H1 routed inter8 > No-Gate (corrected)": paired(runs, "fix_inter8", "fix_nogate"),
         "H2 inter8 vs no-cross-attn (corrected)": paired(runs, "fix_inter8", "fix_noxattn_inter8"),
         "routed intra8 > No-Gate (corrected)": paired(runs, "fix_intra8", "fix_nogate"),
+        "post hoc: routed inter8 no-cross-attn > No-Gate, used params matched (corrected)": paired(
+            runs, "fix_noxattn_inter8", "fix_nogate"),
         "No-Gate > Baseline (corrected)": paired(runs, "fix_nogate", "fix_base"),
         "Routed inter16 > No-Gate (corrected)": paired(runs, "fix_inter16", "fix_nogate"),
         "multi-task Routed > No-Gate, ProofWriter (corrected)": paired(runs, "fix_multi_logic", "fix_multi_nogate", "pw_acc"),

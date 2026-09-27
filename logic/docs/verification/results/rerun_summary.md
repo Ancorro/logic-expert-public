@@ -30,6 +30,7 @@
 | H1 routed inter8 > No-Gate (corrected) | 3 | -0.0127 | 0.0083 | no |
 | H2 inter8 vs no-cross-attn (corrected) | 3 | -0.0105 | 0.0114 | no |
 | routed intra8 > No-Gate (corrected) | 3 | -0.0036 | 0.0019 | no |
+| post hoc: routed inter8 no-cross-attn > No-Gate, used params matched (corrected) | 3 | -0.0021 | 0.0035 | no |
 | No-Gate > Baseline (corrected) | 3 | +0.0139 | 0.0021 | yes |
 | Routed inter16 > No-Gate (corrected) | 3 | -0.0050 | 0.0029 | no |
 | multi-task Routed > No-Gate, ProofWriter (corrected) | 3 | +0.0183 | 0.0058 | yes |
