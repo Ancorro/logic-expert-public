@@ -208,7 +208,8 @@ All numbers come from `results/raw/*.json`. Two scripts generate everything from
 `scripts/verify/aggregate.py results/raw results` writes `results/rerun_summary.{md,json}`,
 `results/proofwriter_reruns.png` and `results/routing_heatmap_corrected.png`, and
 `scripts/verify/make_tex_tables.py results` writes `results/paper_tables.tex`. The node
-behind each run is in `results/raw/<run>.where`.
+behind each run is in `results/raw/<run>.where`, except `mnli_inter_s42`: that pilot ran
+before claim records existed, and its log header shows dgxh-2 (H100 80GB).
 
 **Seeds and data.** The seed picks the train and validation subsets (`load_proofwriter` and
 MNLI `shuffle(seed)`) as well as the initialisation. Runs with the same seed see identical
@@ -260,8 +261,10 @@ rewritten as a null result. No retuning was done.
 | Routed intra G=8 | 0.880 | 0.860 ± 0.033 | 0.880 (exact) | ±0.066 | yes |
 | Routed inter G=8 | 0.878 | 0.851 ± 0.048 | 0.870 | ±0.096 | yes |
 
-All three pass the pre-registered rule, but the routed rows pass mainly because the seed
-spread is large: a ±0.096 tolerance says little. Every rerun mean is 1.7 to 2.7 pp below the
+All three pass the pre-registered rule, but for different reasons. The routed rows pass
+mainly because the seed spread is large, and a ±0.096 tolerance says little. The No-Gate row
+(0.888 vs 0.871 ± 0.006) is about 2.8 seed SDs out. It passes only because at n = 500 the
+binomial SE (about 1.5 pp) is larger than the seed SD, and the rule uses the larger of the two. Every rerun mean is 1.7 to 2.7 pp below the
 published single run, which is consistent with the published values being favourable draws.
 Routed vs No-Gate on MNLI is -2.0 pp (inter) and -1.1 pp (intra), neither significant. The
 paper now reports the 3-seed means.
