@@ -1,0 +1,4 @@
+# Files read by bash/Slurm on the cluster must keep LF endings (CRLF broke the job reader).
+*.sh text eol=lf
+*.sbatch text eol=lf
+logic/scripts/verify/manifest/** text eol=lf
