@@ -202,7 +202,109 @@ weights, so small updates to large weights are also rounded away (cf. Zamirai et
 "Revisiting BFloat16 Training"). This is recorded as a limitation. It is not corrected here,
 because the reruns keep the paper's setup.
 
-## 4. Rerun results
+## 4. Rerun results (all 39 runs complete, 2026-09-27)
 
-_Pending._ Harvested outputs go to `results/raw/`; `scripts/verify/aggregate.py results/raw results`
-writes `results/rerun_summary.{md,json}` and the figures.
+All numbers come from `results/raw/*.json`. Two scripts generate everything from those files:
+`scripts/verify/aggregate.py results/raw results` writes `results/rerun_summary.{md,json}`,
+`results/proofwriter_reruns.png` and `results/routing_heatmap_corrected.png`, and
+`scripts/verify/make_tex_tables.py results` writes `results/paper_tables.tex`. The node
+behind each run is in `results/raw/<run>.where`.
+
+**Seeds and data.** The seed picks the train and validation subsets (`load_proofwriter` and
+MNLI `shuffle(seed)`) as well as the initialisation. Runs with the same seed see identical
+data, so the comparisons below are seed-paired and each SD includes variation from the data
+subset. ProofWriter validation n = 5000 (1000 for multi-task); MNLI validation n = 500.
+
+### 4.1 Corrected ProofWriter (Track B, rulebase + question, mean ± SD over 3 seeds)
+
+| Row | Val acc | Val loss | alpha (final) | Routing H / ln(3G) | Params | Published (question-only) |
+|---|---|---|---|---|---|---|
+| Baseline | 0.925 ± 0.005 | 0.198 ± 0.003 | -- | -- | 7,504,936,963 | 0.417 |
+| No-Gate Control | **0.939 ± 0.004** | **0.167 ± 0.014** | 0.01 fixed | -- | 7,582,192,483 | 0.525 |
+| Routed intra G=8 | 0.936 ± 0.004 | 0.194 ± 0.023 | 0.01 fixed | 0.972 | 7,579,068,163 | 0.542 |
+| Routed inter G=8, alpha 0.01 | 0.927 ± 0.012 | 0.203 ± 0.021 | 0.01 fixed | 0.972 | 7,579,068,163 | 0.562 |
+| Routed inter G=8, alpha 0.1 | 0.936 ± 0.005 | 0.179 ± 0.021 | 0.1 fixed | 0.972 | 7,579,068,163 | 0.546 |
+| Routed inter G=8, learned alpha | 0.938 ± 0.011 | 0.172 ± 0.007 | 0.0077 (from 0.01) | 0.973 | 7,579,068,163 | 0.546 |
+| Routed inter G=16 | 0.934 ± 0.002 | 0.198 ± 0.022 | 0.01 fixed | 0.976 | 7,579,725,059 | 0.501 |
+| Routed inter G=8, no cross-attn | 0.937 ± 0.010 | 0.178 ± 0.031 | 0.01 fixed | 0.974 | 7,507,724,035 | -- |
+
+With the rulebase restored, every variant lands between 0.925 and 0.939, which is 36 to 51 pp
+above the published question-only numbers. The published ProofWriter numbers therefore do
+not describe the architecture on the actual task. They are replaced, not "verified".
+
+### 4.2 Pre-registered claims (section 3d)
+
+| Claim | Seed-paired diff | SE | Verdict |
+|---|---|---|---|
+| **H1** Routed inter G=8 > No-Gate Control | **-1.3 pp** (-2.5, +0.3, -1.7) | 0.8 | **not supported, so the kill criterion applies** |
+| **H2** inter G=8 vs same without cross-attention | -1.1 pp | 1.1 | no difference; the no-cross-attn model is at least as good with 71M fewer parameters |
+| **H3** Baseline collapsed to majority (0.465)? | Baseline = 0.925 | -- | not triggered; the Baseline learns once pooling is fixed |
+
+Secondary comparisons, all with the same test (mean > 0 and > 2 SE):
+- Routed intra G=8 vs No-Gate: -0.4 pp (SE 0.2).
+- Routed inter G=16 vs No-Gate: -0.5 pp (SE 0.3).
+- No-Gate vs Baseline: **+1.4 pp (SE 0.2), supported.** The No-Gate model differs from the
+  Baseline by more than the parallel branch: it also has the fusion MLP and an RMSNorm before
+  the head, while the Baseline puts a linear head directly on the last token. The gain belongs
+  to that whole head path, not to parallel capacity alone.
+
+**Kill criterion outcome:** on the task it was designed for, routing gives no measurable gain
+over a parameter-matched control, and neither does cross-attention. The abstract and conclusion are
+rewritten as a null result. No retuning was done.
+
+### 4.3 MNLI (verification of published values; rerun on the published loader, which is unaffected)
+
+| Row | Published | Rerun (3 seeds) | Seed 42 | Tolerance | Verified |
+|---|---|---|---|---|---|
+| No-Gate Control | 0.888 | 0.871 ± 0.006 | 0.876 | ±0.030 | yes |
+| Routed intra G=8 | 0.880 | 0.860 ± 0.033 | 0.880 (exact) | ±0.066 | yes |
+| Routed inter G=8 | 0.878 | 0.851 ± 0.048 | 0.870 | ±0.096 | yes |
+
+All three pass the pre-registered rule, but the routed rows pass mainly because the seed
+spread is large: a ±0.096 tolerance says little. Every rerun mean is 1.7 to 2.7 pp below the
+published single run, which is consistent with the published values being favourable draws.
+Routed vs No-Gate on MNLI is -2.0 pp (inter) and -1.1 pp (intra), neither significant. The
+paper now reports the 3-seed means.
+
+### 4.4 Multi-task (50/50 ProofWriter + MNLI, corrected ProofWriter)
+
+| Row | ProofWriter | MNLI | Mean | Published PW / MNLI |
+|---|---|---|---|---|
+| No-Gate Control | 0.918 ± 0.017 | **0.892 ± 0.012** | 0.905 | 0.544 / 0.879 |
+| Routed inter G=8 | **0.937 ± 0.009** | 0.882 ± 0.016 | 0.909 | 0.536 / 0.881 |
+
+Routed minus No-Gate is +1.8 pp on ProofWriter (SE 0.6) and -1.0 pp on MNLI (SE 0.8).
+**The ProofWriter gain is exploratory, not confirmatory.** This comparison was added after the
+pre-registration, it is one of 9 comparisons, and with n = 3 (2 degrees of freedom) the 2 SE rule
+is lenient: the 95% t critical value is about 4.3, and t here is about 3.2. It is worth a
+pre-registered follow-up, but it does not override H1.
+
+### 4.5 Mechanism diagnostics
+
+- **Routing is close to uniform.** The normalised routing entropy H / ln(3G) is 0.97 to 0.98
+  in every routed run, for both G = 8 and G = 16. In the corrected heatmap
+  (`results/routing_heatmap_corrected.png`, seed 42, one validation batch, token-averaged) most
+  cells sit near the uniform value 1/24 = 0.042, with isolated cells up to 0.17. The paper's
+  "sparse, few dominant operators" reading does not hold. Raw entropy cannot be compared across
+  different G, so the published "higher entropy at G = 16 goes with worse accuracy" claim is withdrawn.
+- **Learned alpha moves down.** Starting at 0.01, alpha ends at 0.0077 ± 0.0014, and the seed-42
+  trace is 0.0100, 0.0074, 0.0063, 0.0062. The model turns the logic branch down, which fits the
+  null accuracy result. Alpha stays frozen at 0.1 wherever it starts there (section 3e).
+- **Gradient norms** (mean over the final epoch): Baseline 28.5, No-Gate 20.3, routed 19.6 to 22.9.
+  The published "routed variants have markedly lower gradient norms" pattern shrinks to
+  "anything with the fusion head has lower norms than the Baseline".
+- **Training length.** Corrected accuracy is still rising at epoch 3 in every row. The paper's
+  claim that "longer training only decreased accuracy due to overfitting" came from the
+  question-only setting and is removed.
+
+### 4.6 Paper corrections beyond the tables
+
+- **MNLI appendix.** The paper says 4,000 train, 200 validation, batch 30/100. The logged config
+  (and the reruns) used 5,000 / 500, batch 20/10, and 2 epochs.
+- **Table 1 alpha labels.** The paper lists 0.00001 (fixed) for No-Gate, intra G=8 and G=16.
+  Their logged `alpha_init` is 0.01, and the original runs did not set `learn_fusion_alpha`.
+- **Appendix Table A1 (old architecture without cross-attention).** Its No-Gate value, 0.4646,
+  is exactly the ProofWriter majority rate, so it was also an input-blind run. It is replaced by
+  the corrected no-cross-attention ablation (section 4.1).
+- **Hardware.** The original runs used an RTX PRO 6000 on Colab. The reruns used one H100 80GB
+  or H200 141GB per run on OSU HPC (`dgxh`, `preempt`).
