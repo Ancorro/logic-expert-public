@@ -117,12 +117,29 @@ published pooling.
 ### 3a'. Hardware for reruns
 
 `dgxh` (H100 80GB) had a ~900-job backlog with an estimated start more than 24 h out, so an
-opt-in 2-GPU path was added (`VERIFY_MP=1`, `logic/core/model_parallel.py`). The backbone
-layers are split across 2x A40 48GB in one process with accelerate `dispatch_model`, and
-the logic modules and head sit on GPU 0. The computation is identical to one GPU; there
-is no sharding or distributed reduction. A tiny-model fp64 check gave |Δlogits| < 2e-7.
-Jobs are submitted to both partitions with atomic claims (`claims/<job>`). The partition
-and node of every run are recorded in `claims/<job>.where` and reported with the results.
+opt-in 2-GPU path was added (`VERIFY_MP=1`, `logic/core/model_parallel.py`): backbone layers
+split across 2x A40 48GB in one process, logic modules and head on GPU 0, no sharding.
+A tiny-model fp64 check on a CPU+CUDA split gave |Δlogits| < 2e-7.
+
+**Abandoned (2026-09-27).** On the `ampere` A40 nodes, direct GPU-to-GPU (P2P) copies
+silently corrupted tensors: a `.to("cuda:1")` round trip mismatched nearly every element,
+while the same copy staged through CPU was exact. Split-model forwards diverged from
+single-GPU from the first layer on GPU 1 (layer 16) and produced NaN losses. This is a
+node/driver fault, not a code bug; it has not been reported to HPC staff yet. No result in
+this report used the model-parallel path.
+
+All reported reruns ran on one GPU on `dgxh` (H100 80GB on dgxh-2/3, H200 141GB on dgxh-4),
+using `slurm/rerun_array.sbatch` with atomic claims (`claims/<job>`); the node of every run is
+in `claims/<job>.where`. MNLI runs have no gradient checkpointing and dynamic padding, so
+peak memory depends on the seed's batches: `mnli_nogate_s777` ran out of memory on an H100
+(79 GB in use) and was rerun on the H200; the remaining MNLI jobs were pinned to `h200`. This
+changes memory headroom only, not the computation.
+
+**Scope reduction (user decision, 2026-09-27).** Only runs that appear in the paper are
+rerun: the corrected ProofWriter track (Track B below, 30 runs) and the MNLI rows (9 runs).
+The question-only Track A ProofWriter reruns were dropped, so the published ProofWriter
+numbers are not re-measured; they are superseded by Track B, and the question-only finding
+rests on the loader audit in section 2b.
 
 ### 3b. When the bug entered
 
@@ -166,6 +183,26 @@ and node of every run are recorded in `claims/<job>.where` and reported with the
   conclusion are rewritten to a negative or neutral result. No retuning to rescue the
   claim is done inside this verification.
 
+### 3e. Third finding: "learned" alpha cannot move from 0.1 (bf16 rounding)
+
+`FusionMLP` creates alpha in fp32 (`fusion.py:35`), but `LogicLlamaModel` casts the fusion
+module to the backbone dtype (`logic_llama_model.py:263`), which is bf16. Every driver gives
+alpha AdamW lr = 20 x base = 2e-4, and an Adam step is at most about lr in size. The bf16
+spacing is 2^-11 ≈ 4.9e-4 around 0.1 and 2^-14 ≈ 6.1e-5 around 0.01. So:
+
+- alpha_init = 0.1 (the alpha=0.1 row, all MNLI rows, both multi-task rows): a 2e-4 step is
+  below half the spacing (2.4e-4) and rounds away. Alpha stays at bf16(0.1) = 0.100098 for
+  the whole run even with `learn_fusion_alpha=True`. The reruns confirm this: `delta = 0`
+  every epoch with a non-zero `alpha_grad_abs`. These rows are fixed-alpha runs in practice.
+- alpha_init = 0.01 (the learned-alpha row): a 2e-4 step exceeds half the spacing (3.05e-5),
+  so alpha can move, in steps of at least one bf16 ulp. Check `fix_learn` in section 4.
+
+More generally, the backbone and logic modules train in pure bf16 without fp32 master
+weights, so small updates to large weights are also rounded away (cf. Zamirai et al., 2020,
+"Revisiting BFloat16 Training"). This is recorded as a limitation. It is not corrected here,
+because the reruns keep the paper's setup.
+
 ## 4. Rerun results
 
-_Pending._
+_Pending._ Harvested outputs go to `results/raw/`; `scripts/verify/aggregate.py results/raw results`
+writes `results/rerun_summary.{md,json}` and the figures.
