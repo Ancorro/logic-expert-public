@@ -369,8 +369,21 @@ class LogicLlamaModel(nn.Module):
 
             return _hook
 
+        # Under gradient checkpointing, hooks run inside each checkpointed layer call but are
+        # gone at recomputation time, so the logic ops cannot run there. In that case the
+        # hooks only record layer outputs and the identical logic steps run afterwards.
+        defer_logic = bool(self.training and getattr(self.backbone, "is_gradient_checkpointing", False))
+        recorded: list[Optional[torch.Tensor | tuple | list]] = [None] * len(self._backbone_layers)
+
+        def _make_recorder(layer_idx: int):
+            def _record(_module: nn.Module, _inputs: tuple, output: torch.Tensor | tuple | list):
+                recorded[layer_idx] = output
+                return output
+
+            return _record
+
         handles = [
-            layer.register_forward_hook(_make_hook(layer_idx))
+            layer.register_forward_hook(_make_recorder(layer_idx) if defer_logic else _make_hook(layer_idx))
             for layer_idx, layer in enumerate(self._backbone_layers)
         ]
         try:
@@ -378,6 +391,11 @@ class LogicLlamaModel(nn.Module):
         finally:
             for handle in handles:
                 handle.remove()
+        if defer_logic:
+            for layer_idx, output in enumerate(recorded):
+                if output is None:
+                    raise RuntimeError(f"Backbone layer {layer_idx} produced no recorded output")
+                _make_hook(layer_idx)(None, (), output)
 
         llm_hidden = outputs.last_hidden_state
         if self._logic_device is not None:

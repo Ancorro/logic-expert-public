@@ -9,7 +9,7 @@
 #SBATCH -p ampere
 #SBATCH --gres=gpu:2
 #SBATCH -c 8
-#SBATCH --mem=128G
+#SBATCH --mem=64G
 #SBATCH -t 08:00:00
 #SBATCH -o /nfs/hpc/share/cleasbys/logic-verify/logs/%x_%A_%a.out
 
