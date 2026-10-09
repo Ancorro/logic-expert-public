@@ -1,0 +1,14 @@
+2026-03-17 18:06:32
+[logic_llama] epoch=0 val_loss=1.0931 val_acc=0.3686
+2026-03-17 18:08:56
+[logic_llama] epoch=1 train_loss=0.8543 val_loss(full)=0.8275 val_acc(full)=0.5290 mini_acc=0.5212±0.0263
+2026-03-17 18:11:19
+[logic_llama] epoch=2 train_loss=0.8292 val_loss(full)=0.8158 val_acc(full)=0.5512 mini_acc=0.5504±0.0197
+2026-03-17 18:13:43
+[logic_llama] epoch=3 train_loss=0.8251 val_loss(full)=0.8168 val_acc(full)=0.5468 mini_acc=0.5567±0.0206
+2026-03-17 18:16:06
+[logic_llama] epoch=4 train_loss=0.8167 val_loss(full)=0.8313 val_acc(full)=0.5248 mini_acc=0.5079±0.0178
+2026-03-17 18:18:30
+[logic_llama] epoch=5 train_loss=0.8174 val_loss(full)=0.8300 val_acc(full)=0.4944 mini_acc=0.4979±0.0267
+2026-03-17 18:20:53
+[logic_llama] epoch=6 train_loss=0.8071 val_loss(full)=0.8323 val_acc(full)=0.5354 mini_acc=0.5312±0.0383

@@ -1,0 +1,71 @@
+LOGIC-STREAM STE MODE (ste_binary)
+==================================
+
+FORWARD PASS (hard gate behavior)
+---------------------------------
+Input
+  |
+  v
+[ Backbone hidden states per layer: h_1 ... h_N ]
+  |
+  v
+[ LogicProjection: [B,S,H] -> [B,S,L] ]
+  |
+  v
+[ LogicLayer_k ]
+  |
+  +--> Routing softmax (train): r = softmax(W_r * token_logic)          [B,S,G]
+  |
+  +--> Gate inputs: gate_in = einsum(r, token_logic)                     [B,G,L]
+  |
+  +--> Soft gate logits: g_soft = sigmoid(W_g * gate_in)                 [B,G]
+  |
+  +--> STE hardening (forward value):
+  |      g_hard = 1[g_soft >= 0.5]
+  |      g_ste  = stopgrad(g_hard - g_soft) + g_soft
+  |      (numerically equals g_hard in forward)
+  |
+  +--> Gate composition: AND/OR/NOT over g_ste                           [B,G]
+  |
+  +--> Logic update: delta = W_u * composed_gates                        [B,L]
+  |
+  +--> State update: logic_state <- LayerNorm(logic_state + delta)       [B,L]
+  |
+  v
+[ Final logic_state ]
+  |
+  v
+[ Broadcast to [B,S,L] ] -> [ FusionMLP with final backbone hidden ] -> [ Pool ] -> [ Task head ] -> logits
+
+
+BACKWARD PASS (surrogate gradient at threshold only)
+----------------------------------------------------
+Loss L = CE(logits, labels)
+  |
+  v
+Task head <- Fusion <- Logic state updates <- Gate composition <- g_ste <- g_soft <- gate scalar/projection
+
+Gradient rule at STE node:
+  dL/dg_soft := dL/dg_ste
+  dL/dg_hard is not used (hard threshold derivative is bypassed)
+
+So gradients still flow through:
+  - routing softmax (training path)
+  - einsum aggregation
+  - gate scalar linear layer
+  - logic update linear layer
+  - fusion and classifier head
+  - backbone (if not frozen)
+
+Only the hard binarization derivative is replaced.
+
+
+MODE COMPARISON
+---------------
+soft mode:
+  forward uses g_soft
+  backward uses true autograd through sigmoid path
+
+ste_binary mode:
+  forward uses hard-like g_hard values
+  backward uses surrogate gradient from g_soft path

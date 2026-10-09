@@ -1,0 +1,127 @@
+"""Convert a pinned eval notebook into a batch script for HPC reruns.
+
+The notebook's own code is kept verbatim so a rerun executes the same driver that
+produced the paper numbers. Three things are injected:
+  1. after the ``CFG = ExpConfig()`` cell: overrides loaded from $VERIFY_OVERRIDES (JSON);
+  2. before the ``# Build models`` cell: optional ``use_cross_attn`` ablation default;
+  3. at the end: the per-epoch ``history`` and final wandb summary are dumped to $VERIFY_OUT.
+Cells after the training cell (plots, mechanism visuals) are dropped.
+
+Usage: python nb2py.py NOTEBOOK.ipynb OUT.py
+"""
+import json
+import sys
+
+OVERRIDES = '''
+# --- injected by nb2py: apply per-run overrides ---
+import json as _vjson, os as _vos
+_VERIFY_OVR = _vjson.load(open(_vos.environ["VERIFY_OVERRIDES"]))
+for _k, _v in _VERIFY_OVR.items():
+    if isinstance(_v, list):
+        _v = tuple(_v)
+    setattr(CFG, _k, _v)
+print("VERIFY overrides applied:", _VERIFY_OVR)
+print(CFG)
+'''
+
+XATTN = '''
+# --- injected by nb2py: cross-attention ablation (default keeps original behaviour) ---
+import functools as _vft
+if not bool(getattr(CFG, "use_cross_attn", True)):
+    _orig_init = logic_llama_mod.LogicLlamaModel.__init__
+    @_vft.wraps(_orig_init)
+    def _no_xattn_init(self, *a, **kw):
+        kw["use_cross_attn"] = False
+        _orig_init(self, *a, **kw)
+    logic_llama_mod.LogicLlamaModel.__init__ = _no_xattn_init
+    print("VERIFY: use_cross_attn=False patched into LogicLlamaModel")
+'''
+
+ROUTING = '''
+# --- injected by nb2py: optional 2-GPU layer-wise model parallelism (VERIFY_MP=1) ---
+import os as _vos2
+if _vos2.environ.get("VERIFY_MP") == "1":
+    _orig_build_model = build_model
+    def build_model(name):
+        _n, _m = _orig_build_model(name)
+        _m.enable_model_parallel(["cuda:0", "cuda:1"])
+        print("VERIFY: model-parallel over cuda:0,cuda:1;", {d: round(torch.cuda.memory_allocated(d) / 2**30, 1) for d in (0, 1)}, "GiB")
+        return _n, _m
+# --- injected by nb2py: after training, save mean routing weights [layers, 3G] on one val batch ---
+_orig_run_training = run_training
+def run_training(model, *a, **kw):
+    out = _orig_run_training(model, *a, **kw)
+    try:
+        import numpy as _vnp, os as _vos
+        _vb = next(iter(val_loader))
+        model.eval()
+        with torch.no_grad(), torch.autocast("cuda", dtype=amp_dtype):
+            _vo = model(input_ids=_vb["input_ids"].to(device), attention_mask=_vb["attention_mask"].to(device))
+        _rh = getattr(_vo, "routing_history", None) or []
+        if _rh and _rh[0].shape[-1] > 1:
+            _m = _vb["attention_mask"].to(device).unsqueeze(-1).float()
+            _arr = _vnp.stack([((r.float() * _m).sum((0, 1)) / _m.sum()).cpu().numpy() for r in _rh])
+            _vnp.save(_vos.environ["VERIFY_OUT"].replace(".json", "_routing.npy"), _arr)
+            print("VERIFY routing heatmap saved", _arr.shape)
+    except Exception as _e:
+        print("VERIFY routing heatmap skipped:", repr(_e))
+    return out
+'''
+
+DUMP = '''
+# --- injected by nb2py: persist results ---
+import json as _vjson, os as _vos, math as _vmath
+def _vclean(x):
+    if isinstance(x, float) and not _vmath.isfinite(x):
+        return None
+    if isinstance(x, dict):
+        return {k: _vclean(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [_vclean(v) for v in x]
+    try:
+        _vjson.dumps(x)
+        return x
+    except TypeError:
+        return str(x)
+_vsum = {}
+try:
+    _vsum = dict(run.summary._as_dict()) if hasattr(run.summary, "_as_dict") else {}
+except Exception as _e:
+    _vsum = {"_summary_error": str(_e)}
+_vout = {"history": _vclean(history), "param_count": param_count, "summary": _vclean(_vsum),
+         "overrides": _VERIFY_OVR, "wandb_run_id": getattr(run, "id", None)}
+_vos.makedirs(_vos.path.dirname(_vos.environ["VERIFY_OUT"]), exist_ok=True)
+with open(_vos.environ["VERIFY_OUT"], "w") as _f:
+    _vjson.dump(_vout, _f, indent=1)
+print("VERIFY results written to", _vos.environ["VERIFY_OUT"])
+'''
+
+
+def main(nb_path: str, out_path: str) -> None:
+    cells = ["".join(c["source"]) for c in json.load(open(nb_path, encoding="utf-8"))["cells"]
+             if c["cell_type"] == "code"]
+    parts = []
+    seen_cfg = seen_build = seen_train = False
+    for src in cells:
+        if "K_EPOCHS = CFG.k_epochs" in src:
+            parts.append(ROUTING)
+        if src.lstrip().startswith("# Build models"):
+            parts.append(XATTN)
+            seen_build = True
+        parts.append(src)
+        if "CFG = ExpConfig()" in src:
+            parts.append(OVERRIDES)
+            seen_cfg = True
+        if "K_EPOCHS = CFG.k_epochs" in src:
+            seen_train = True
+            break
+    if not (seen_cfg and seen_build and seen_train):
+        raise SystemExit(f"{nb_path}: injection anchors missing cfg={seen_cfg} build={seen_build} train={seen_train}")
+    parts.append(DUMP)
+    header = f"# AUTO-GENERATED by nb2py.py from {nb_path}; do not edit.\n"
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(header + "\n\n".join(parts) + "\n")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1], sys.argv[2])
